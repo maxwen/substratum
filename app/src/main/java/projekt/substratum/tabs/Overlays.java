@@ -142,7 +142,6 @@ public class Overlays extends Fragment {
     public ArrayList<String> all_installed_overlays;
     public Switch toggle_all;
     public SwipeRefreshLayout swipeRefreshLayout;
-    public ProgressBar progressBar;
     public Boolean is_active = false;
     public StringBuilder error_logs;
     public ProgressBar materialProgressBar;
@@ -169,6 +168,8 @@ public class Overlays extends Fragment {
     public ActivityManager am;
     public boolean decryptedAssetsExceptionReached;
     public int overlaysWaiting = 0;
+    private Context context;
+    private Activity activity;
 
     protected void logTypes() {
         if (ENABLE_PACKAGE_LOGGING) {
@@ -198,7 +199,7 @@ public class Overlays extends Fragment {
             }
             if (!checkedOverlays.isEmpty()) {
                 OverlayFunctions.Phase2_InitializeCache phase2 = new OverlayFunctions
-                        .Phase2_InitializeCache(this);
+                        .Phase2_InitializeCache(this, context, activity);
                 if (base_spinner.getSelectedItemPosition() != 0 &&
                         base_spinner.getVisibility() == View.VISIBLE) {
                     phase2.execute(base_spinner.getSelectedItem().toString());
@@ -206,7 +207,7 @@ public class Overlays extends Fragment {
                     phase2.execute("");
                 }
                 for (OverlaysItem overlay : checkedOverlays) {
-                    Log.d("OverlayTargetPackageKiller", "Killing package : " + overlay.getPackageName());
+                    Log.d("OverlayTargetPackageKiller", "startCompileEnableMode: Killing package : " + overlay.getPackageName());
                     am.killBackgroundProcesses(overlay.getPackageName());
                 }
             } else {
@@ -236,7 +237,7 @@ public class Overlays extends Fragment {
 
             if (!checkedOverlays.isEmpty()) {
                 OverlayFunctions.Phase2_InitializeCache phase2 = new OverlayFunctions
-                        .Phase2_InitializeCache(this);
+                        .Phase2_InitializeCache(this, context, activity);
                 if (base_spinner.getSelectedItemPosition() != 0 &&
                         base_spinner.getVisibility() == View.VISIBLE) {
                     phase2.execute(base_spinner.getSelectedItem().toString());
@@ -244,7 +245,7 @@ public class Overlays extends Fragment {
                     phase2.execute("");
                 }
                 for (OverlaysItem overlay : checkedOverlays) {
-                    Log.d("OverlayTargetPackageKiller", "Killing package : " + overlay.getPackageName());
+                    Log.d("OverlayTargetPackageKiller", "startCompileUpdateMode: Killing package : " + overlay.getPackageName());
                     am.killBackgroundProcesses(overlay.getPackageName());
                 }
             } else {
@@ -280,7 +281,7 @@ public class Overlays extends Fragment {
                 }
                 if (!checkedOverlays.isEmpty()) {
                     OverlayFunctions.Phase2_InitializeCache phase2 = new OverlayFunctions
-                            .Phase2_InitializeCache(this);
+                            .Phase2_InitializeCache(this, context, activity);
                     if (base_spinner.getSelectedItemPosition() != 0 &&
                             base_spinner.getVisibility() == View.VISIBLE) {
                         phase2.execute(base_spinner.getSelectedItem().toString());
@@ -288,7 +289,7 @@ public class Overlays extends Fragment {
                         phase2.execute("");
                     }
                     for (OverlaysItem overlay : checkedOverlays) {
-                        Log.d("OverlayTargetPackageKiller", "Killing package : " + overlay.getPackageName());
+                        Log.d("OverlayTargetPackageKiller", "startDisable: Killing package : " + overlay.getPackageName());
                         am.killBackgroundProcesses(overlay.getPackageName());
                     }
                 } else {
@@ -350,7 +351,6 @@ public class Overlays extends Fragment {
                             (dialog, id12) -> ElevatedCommands.reboot());
                     alertDialogBuilder.setNegativeButton(
                             R.string.remove_dialog_later, (dialog, id1) -> {
-                                progressBar.setVisibility(View.GONE);
                                 dialog.dismiss();
                             });
                     AlertDialog alertDialog = alertDialogBuilder.create();
@@ -389,7 +389,7 @@ public class Overlays extends Fragment {
             }
             if (!checkedOverlays.isEmpty()) {
                 OverlayFunctions.Phase2_InitializeCache phase2 = new OverlayFunctions
-                        .Phase2_InitializeCache(this);
+                        .Phase2_InitializeCache(this, context, activity);
                 if (base_spinner.getSelectedItemPosition() != 0 &&
                         base_spinner.getVisibility() == View.VISIBLE) {
                     phase2.execute(base_spinner.getSelectedItem().toString());
@@ -426,6 +426,8 @@ public class Overlays extends Fragment {
         prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         am = (ActivityManager) getContext().getSystemService(Activity.ACTIVITY_SERVICE);
+        context = getContext();
+        activity = getActivity();
 
         // Register the theme install receiver to auto refresh the fragment
         refreshReceiver = new RefreshReceiver();
@@ -464,9 +466,6 @@ public class Overlays extends Fragment {
         }
 
         mixAndMatchMode = prefs.getBoolean("enable_swapping_overlays", false);
-
-        progressBar = (ProgressBar) root.findViewById(R.id.header_loading_bar);
-        progressBar.setVisibility(View.GONE);
 
         materialProgressBar = (ProgressBar) root.findViewById(R.id.progress_bar_loader);
 

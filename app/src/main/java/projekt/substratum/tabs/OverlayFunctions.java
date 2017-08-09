@@ -47,6 +47,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import projekt.substratum.OmniActivity;
+import projekt.substratum.Substratum;
 import projekt.substratum.adapters.tabs.overlays.OverlaysAdapter;
 import projekt.substratum.adapters.tabs.overlays.OverlaysItem;
 import projekt.substratum.common.References;
@@ -68,15 +69,22 @@ class OverlayFunctions {
 
     static class Phase2_InitializeCache extends AsyncTask<String, Integer, String> {
         private WeakReference<Overlays> ref;
+        private WeakReference<Context> refContext;
+        private WeakReference<Activity> refActivity;
 
-        Phase2_InitializeCache(Overlays fragment) {
+        Phase2_InitializeCache(Overlays fragment, Context context, Activity activity) {
             ref = new WeakReference<>(fragment);
+            refActivity = new WeakReference<Activity>(activity);
+            refContext = new WeakReference<Context>(context);
         }
 
         @Override
         protected void onPreExecute() {
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
+            if (context == null) {
+                context = refContext.get();
+            }
             fragment.final_runner = new ArrayList<>();
             fragment.late_install = new ArrayList<>();
 
@@ -119,7 +127,9 @@ class OverlayFunctions {
         @Override
         protected void onPostExecute(String result) {
             Overlays fragment = ref.get();
-            fragment.phase3_mainFunction = new Phase3_mainFunction(fragment);
+            Context context = refContext.get();
+            Activity activity = refActivity.get();
+            fragment.phase3_mainFunction = new Phase3_mainFunction(fragment, context, activity);
             if (result != null) {
                 fragment.phase3_mainFunction.execute(result);
             } else {
@@ -132,6 +142,9 @@ class OverlayFunctions {
         protected String doInBackground(String... sUrl) {
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
+            if (context == null) {
+                context = refContext.get();
+            }
             if (!fragment.enable_mode && !fragment.disable_mode) {
                 // Initialize Substratum cache with theme only if permitted
                 if (References.isCachingEnabled(context) && !fragment.has_initialized_cache) {
@@ -172,9 +185,13 @@ class OverlayFunctions {
 
     static class Phase3_mainFunction extends AsyncTask<String, Integer, String> {
         private WeakReference<Overlays> ref;
+        private WeakReference<Context> refContext;
+        private WeakReference<Activity> refActivity;
 
-        Phase3_mainFunction(Overlays fragment) {
+        Phase3_mainFunction(Overlays fragment, Context context, Activity activity) {
             ref = new WeakReference<>(fragment);
+            refActivity = new WeakReference<Activity>(activity);
+            refContext = new WeakReference<Context>(context);
         }
 
         @Override
@@ -183,6 +200,9 @@ class OverlayFunctions {
                     "Substratum is proceeding with your actions and is now actively running...");
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
+            if (context == null) {
+                context = refContext.get();
+            }
 
             fragment.missingType3 = false;
             fragment.has_failed = false;
@@ -199,8 +219,6 @@ class OverlayFunctions {
                 }
                 fragment.mProgressDialog.setMessage(context.getResources().getString(
                         R.string.sb_phase_2_loader));
-            } else {
-                fragment.progressBar.setVisibility(View.VISIBLE);
             }
             super.onPreExecute();
         }
@@ -219,7 +237,9 @@ class OverlayFunctions {
             super.onPostExecute(result);
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
-
+            if (context == null) {
+                context = refContext.get();
+            }
             fragment.final_command = new ArrayList<>();
 
             // Check if not compile_enable_mode
@@ -232,7 +252,7 @@ class OverlayFunctions {
             }
 
             if (!fragment.enable_mode && !fragment.disable_mode) {
-                new Phase4_finishUpdateFunction(fragment).execute();
+                new Phase4_finishUpdateFunction(fragment, context, refActivity.get()).execute();
                 if (fragment.has_failed) {
                     fragment.failedFunction(context);
                 } else {
@@ -257,9 +277,9 @@ class OverlayFunctions {
                     // Suppress warning
                 }
             } else if (fragment.enable_mode) {
-                new Phase4_finishEnableFunction(fragment).execute();
+                new Phase4_finishEnableFunction(fragment, context, refActivity.get()).execute();
             } else if (fragment.disable_mode) {
-                new Phase4_finishDisableFunction(fragment).execute();
+                new Phase4_finishDisableFunction(fragment, context, refActivity.get()).execute();
             }
             if (!References.checkOMS(context) &&
                     fragment.final_runner.size() == fragment.fail_count) {
@@ -275,7 +295,6 @@ class OverlayFunctions {
                 alertDialogBuilder
                         .setNegativeButton(R.string.remove_dialog_later,
                                 (dialog, id1) -> {
-                                    fragment.progressBar.setVisibility(View.GONE);
                                     dialog.dismiss();
                                 });
                 alertDialogBuilder.setCancelable(false);
@@ -292,6 +311,9 @@ class OverlayFunctions {
         protected String doInBackground(String... sUrl) {
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
+            if (context == null) {
+                context = refContext.get();
+            }
             String parsedVariant = sUrl[0].replaceAll("\\s+", "");
             String unparsedVariant = sUrl[0];
             fragment.failed_packages = new StringBuilder();
@@ -827,16 +849,19 @@ class OverlayFunctions {
 
     static class Phase4_finishEnableFunction extends AsyncTask<Void, Void, Void> {
         private WeakReference<Overlays> ref;
+        private WeakReference<Context> refContext;
+        private WeakReference<Activity> refActivity;
 
-        Phase4_finishEnableFunction(Overlays overlays) {
+        Phase4_finishEnableFunction(Overlays overlays, Context context, Activity activity) {
             ref = new WeakReference<>(overlays);
+            refActivity = new WeakReference<Activity>(activity);
+            refContext = new WeakReference<Context>(context);
         }
 
         @Override
         protected void onPreExecute() {
             Overlays fragment = ref.get();
 
-            fragment.progressBar.setVisibility(View.VISIBLE);
             if (fragment.toggle_all.isChecked()) fragment.toggle_all.setChecked(false);
         }
 
@@ -844,6 +869,9 @@ class OverlayFunctions {
         protected Void doInBackground(Void... voids) {
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
+            if (context == null) {
+                context = refContext.get();
+            }
 
             if (fragment.final_runner.size() > 0) {
                 fragment.enable_mode = false;
@@ -871,9 +899,10 @@ class OverlayFunctions {
         protected void onPostExecute(Void result) {
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
-
+            if (context == null) {
+                context = refContext.get();
+            }
             if (fragment.final_runner.size() > 0) {
-                fragment.progressBar.setVisibility(View.GONE);
                 if (fragment.needsRecreate(context)) {
                     Handler handler = new Handler();
                     handler.postDelayed(() -> {
@@ -897,7 +926,7 @@ class OverlayFunctions {
             } else {
                 fragment.compile_enable_mode = false;
                 fragment.enable_mode = false;
-                Toast.makeText(fragment.getContext(),
+                Toast.makeText(context,
                         R.string.toast_disabled3,
                         Toast.LENGTH_LONG).show();
             }
@@ -906,19 +935,24 @@ class OverlayFunctions {
 
     static class Phase4_finishDisableFunction extends AsyncTask<Void, Void, Void> {
         private WeakReference<Overlays> ref;
+        private WeakReference<Context> refContext;
+        private WeakReference<Activity> refActivity;
 
-        Phase4_finishDisableFunction(Overlays overlays) {
+        Phase4_finishDisableFunction(Overlays overlays, Context context, Activity activity) {
             ref = new WeakReference<>(overlays);
+            refActivity = new WeakReference<Activity>(activity);
+            refContext = new WeakReference<Context>(context);
         }
 
         @Override
         protected void onPreExecute() {
             Overlays fragment = ref.get();
             Activity activity = fragment.getActivity();
+            if (activity == null) {
+                activity = refActivity.get();
+            }
 
             if (fragment.final_runner.size() > 0) {
-                activity.runOnUiThread(() ->
-                        fragment.progressBar.setVisibility(View.VISIBLE));
                 if (fragment.toggle_all.isChecked())
                     activity.runOnUiThread(() -> fragment.toggle_all.setChecked(false));
             }
@@ -928,7 +962,9 @@ class OverlayFunctions {
         protected Void doInBackground(Void... voids) {
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
-
+            if (context == null) {
+                context = refContext.get();
+            }
             if (fragment.final_runner.size() > 0) {
                 fragment.disable_mode = false;
                 ThemeManager.disableOverlay(context, fragment.final_command);
@@ -940,9 +976,14 @@ class OverlayFunctions {
         protected void onPostExecute(Void result) {
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
+            if (context == null) {
+                context = refContext.get();
+            }
             Activity activity = fragment.getActivity();
-
-            activity.runOnUiThread(() -> fragment.progressBar.setVisibility(View.GONE));
+            if (activity == null) {
+                activity = refActivity.get();
+            }
+            final Activity finalActivity = activity;
             if (fragment.final_runner.size() > 0) {
                 if (fragment.needsRecreate(context)) {
                     Handler handler = new Handler();
@@ -957,7 +998,7 @@ class OverlayFunctions {
                                 currentOverlay.setSelected(false);
                                 currentOverlay.updateEnabledOverlays(
                                         fragment.updateEnabledOverlays());
-                                activity.runOnUiThread(() ->
+                                finalActivity.runOnUiThread(() ->
                                         fragment.mAdapter.notifyDataSetChanged());
                             }
                         } catch (Exception e) {
@@ -967,7 +1008,7 @@ class OverlayFunctions {
                 }
             } else {
                 fragment.disable_mode = false;
-                Toast.makeText(fragment.getContext(),
+                Toast.makeText(context,
                         R.string.toast_disabled4,
                         Toast.LENGTH_LONG).show();
             }
@@ -976,15 +1017,22 @@ class OverlayFunctions {
 
     static class Phase4_finishUpdateFunction extends AsyncTask<Void, Void, Void> {
         private WeakReference<Overlays> ref;
+        private WeakReference<Context> refContext;
+        private WeakReference<Activity> refActivity;
 
-        Phase4_finishUpdateFunction(Overlays overlays) {
+        Phase4_finishUpdateFunction(Overlays overlays, Context context, Activity activity) {
             ref = new WeakReference<>(overlays);
+            refActivity = new WeakReference<Activity>(activity);
+            refContext = new WeakReference<Context>(context);
         }
 
         @Override
         protected void onPreExecute() {
             Overlays fragment = ref.get();
             Context context = fragment.getContext();
+            if (context == null) {
+                context = refContext.get();
+            }
 
             fragment.mProgressDialog.dismiss();
 
@@ -1019,11 +1067,11 @@ class OverlayFunctions {
                 }
 
                 if (fragment.missingType3) {
-                    Toast.makeText(fragment.getContext(),
+                    Toast.makeText(context,
                             R.string.toast_compiled_missing,
                             Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(fragment.getContext(),
+                    Toast.makeText(context,
                             R.string.toast_compiled_updated,
                             Toast.LENGTH_LONG).show();
                 }
@@ -1034,8 +1082,14 @@ class OverlayFunctions {
         protected Void doInBackground(Void... voids) {
             Overlays fragment = ref.get();
             Activity activity = fragment.getActivity();
+            if (activity == null) {
+                activity = refActivity.get();
+            }
+            final Activity finalActivity = activity;
             Context context = fragment.getContext();
-
+            if (context == null) {
+                context = refContext.get();
+            }
             if (!fragment.has_failed || fragment.final_runner.size() > fragment.fail_count) {
                 StringBuilder final_commands = new StringBuilder();
                 if (fragment.compile_enable_mode && fragment.mixAndMatchMode) {
@@ -1072,18 +1126,16 @@ class OverlayFunctions {
 
                 if (fragment.final_runner.size() == 0) {
                     if (fragment.base_spinner.getSelectedItemPosition() == 0) {
-                        activity.runOnUiThread(() -> fragment.mAdapter.notifyDataSetChanged());
+                        finalActivity.runOnUiThread(() -> fragment.mAdapter.notifyDataSetChanged());
                     } else {
-                        activity.runOnUiThread(() -> fragment.mAdapter.notifyDataSetChanged());
+                        finalActivity.runOnUiThread(() -> fragment.mAdapter.notifyDataSetChanged());
                     }
                 } else {
-                    activity.runOnUiThread(() -> fragment.progressBar.setVisibility(View.VISIBLE));
                     if (fragment.toggle_all.isChecked())
-                        activity.runOnUiThread(() -> fragment.toggle_all.setChecked(false));
-                    activity.runOnUiThread(() -> fragment.mAdapter.notifyDataSetChanged());
+                        finalActivity.runOnUiThread(() -> fragment.toggle_all.setChecked(false));
+                    finalActivity.runOnUiThread(() -> fragment.mAdapter.notifyDataSetChanged());
                 }
 
-                activity.runOnUiThread(() -> fragment.progressBar.setVisibility(View.GONE));
                 if (fragment.needsRecreate(context)) {
                     Handler handler = new Handler(Looper.getMainLooper());
                     handler.postDelayed(() -> {
@@ -1097,7 +1149,7 @@ class OverlayFunctions {
                                 currentOverlay.setSelected(false);
                                 currentOverlay.updateEnabledOverlays(
                                         fragment.updateEnabledOverlays());
-                                activity.runOnUiThread(() ->
+                                finalActivity.runOnUiThread(() ->
                                         fragment.mAdapter.notifyDataSetChanged());
                             }
                         } catch (Exception e) {
