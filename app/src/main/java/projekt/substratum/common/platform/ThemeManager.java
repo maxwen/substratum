@@ -19,7 +19,9 @@
 package projekt.substratum.common.platform;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.om.OverlayInfo;
+import android.preference.PreferenceManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -441,8 +443,21 @@ public class ThemeManager {
     public static boolean shouldRestartUI(Context context, ArrayList<String> overlays) {
         if (checkOMS(context)) {
             for (String o : overlays) {
-                if (o.startsWith("com.android.systemui"))
+                if (o.startsWith("com.android.systemui")) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    return prefs.getBoolean("enable_restart_systemui", true);
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean willRestartUI(Context context, ArrayList<String> overlays) {
+        if (checkOMS(context)) {
+            for (String o : overlays) {
+                if (o.startsWith("com.android.systemui")) {
                     return true;
+                }
             }
         }
         return false;

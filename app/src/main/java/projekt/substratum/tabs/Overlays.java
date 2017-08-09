@@ -1459,8 +1459,51 @@ public class Overlays extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (!isAdded()) return;
-
             String command = intent.getStringExtra("command");
+            if (command.equals("MixAndMatchMode")) {
+                if (mAdapter != null) {
+                    boolean newValue = intent.getBooleanExtra("newValue", false);
+                    setMixAndMatchMode(newValue);
+                }
+                return;
+            }
+            boolean restartUIEnabled = prefs.getBoolean("enable_restart_systemui", true);
+            if (restartUIEnabled) {
+                overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
+                ArrayList<String> checkedOverlays = new ArrayList<>();
+
+                for (int i = 0; i < overlaysLists.size(); i++) {
+                    OverlaysItem currentOverlay = overlaysLists.get(i);
+                    if (currentOverlay.isSelected()) {
+                        checkedOverlays.add(currentOverlay.getPackageName());
+                    }
+                }
+                boolean wouldRestartSystemUI = ThemeManager.willRestartUI(getContext(), checkedOverlays);
+                if (wouldRestartSystemUI) {
+                    if (!prefs.getBoolean("warning_auto_restart_systemui", false)) {
+                        prefs.edit().putBoolean("warning_auto_restart_systemui", true).commit();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                        builder.setTitle(R.string.restart_systemui_warning_title);
+                        builder.setMessage(R.string.restart_auto_systemui_warning)
+                                .setPositiveButton(android.R.string.ok, (dialog, id18) -> {
+                                    dialog.dismiss();
+                                    doJobCommand(intent, command);
+                                })
+                                .setNegativeButton(android.R.string.cancel, (dialog, id18) -> {
+                                    dialog.dismiss();
+                                });
+                        builder.create();
+                        builder.show();
+                    }
+                } else {
+                    doJobCommand(intent, command);
+                }
+            } else {
+                doJobCommand(intent, command);
+            }
+        }
+
+        private void doJobCommand(Intent intent, String command) {
             switch (command) {
                 case "CompileEnable":
                     if (mAdapter != null) startCompileEnableMode();
@@ -1473,12 +1516,6 @@ public class Overlays extends Fragment {
                     break;
                 case "Enable":
                     if (mAdapter != null) startEnable();
-                    break;
-                case "MixAndMatchMode":
-                    if (mAdapter != null) {
-                        boolean newValue = intent.getBooleanExtra("newValue", false);
-                        setMixAndMatchMode(newValue);
-                    }
                     break;
             }
         }

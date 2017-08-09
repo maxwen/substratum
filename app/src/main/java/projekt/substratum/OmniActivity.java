@@ -289,6 +289,7 @@ public class OmniActivity extends SubstratumActivity {
 
         if (!isOMS && !Root.checkRootAccess()) {
             menu.findItem(R.id.restart_systemui).setVisible(false);
+            menu.findItem(R.id.auto_restart_systemui).setVisible(false);
         }
         if (!isOMS) {
             menu.findItem(R.id.disable).setVisible(false);
@@ -317,6 +318,8 @@ public class OmniActivity extends SubstratumActivity {
             menu.findItem(R.id.enable).setVisible(mStoragePerms);
             menu.findItem(R.id.clean).setVisible(mStoragePerms);
         }
+        boolean enabled = prefs.getBoolean("enable_restart_systemui", true);
+        menu.findItem(R.id.auto_restart_systemui).setChecked(enabled);
         return true;
     }
 
@@ -510,6 +513,10 @@ public class OmniActivity extends SubstratumActivity {
                 return true;
             case R.id.about_substratum:
                 startActivity(new Intent(this, TeamActivity.class));
+                return true;
+            case R.id.auto_restart_systemui:
+                boolean enabled = prefs.getBoolean("enable_restart_systemui", true);
+                prefs.edit().putBoolean("enable_restart_systemui", !enabled).commit();
                 return true;
         }
         return super.onOptionsItemSelected(item);
