@@ -1471,6 +1471,7 @@ public class Overlays extends Fragment {
                 }
                 return;
             }
+            boolean runCommand = true;
             boolean restartUIEnabled = prefs.getBoolean("enable_restart_systemui", true);
             if (restartUIEnabled) {
                 overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
@@ -1485,13 +1486,14 @@ public class Overlays extends Fragment {
                 boolean wouldRestartSystemUI = ThemeManager.willRestartUI(getContext(), checkedOverlays);
                 if (wouldRestartSystemUI) {
                     if (!prefs.getBoolean("warning_auto_restart_systemui", false)) {
+                        runCommand = false;
                         prefs.edit().putBoolean("warning_auto_restart_systemui", true).commit();
                         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                         builder.setTitle(R.string.restart_systemui_warning_title);
                         builder.setMessage(R.string.restart_auto_systemui_warning)
                                 .setPositiveButton(android.R.string.ok, (dialog, id18) -> {
                                     dialog.dismiss();
-                                    doJobCommand(intent, command);
+                                    doJobCommand(command);
                                 })
                                 .setNegativeButton(android.R.string.cancel, (dialog, id18) -> {
                                     dialog.dismiss();
@@ -1499,15 +1501,14 @@ public class Overlays extends Fragment {
                         builder.create();
                         builder.show();
                     }
-                } else {
-                    doJobCommand(intent, command);
                 }
-            } else {
-                doJobCommand(intent, command);
+            }
+            if (runCommand) {
+                doJobCommand(command);
             }
         }
 
-        private void doJobCommand(Intent intent, String command) {
+        private void doJobCommand(String command) {
             switch (command) {
                 case "CompileEnable":
                     if (mAdapter != null) startCompileEnableMode();
