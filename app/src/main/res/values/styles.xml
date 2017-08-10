@@ -23,68 +23,17 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:navigationBarColor">@color/navigationBarColor</item>
+        <item name="alertDialogTheme">@style/AppTheme.DialogAlert</item>
     </style>
 
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowActionBarOverlay">true</item>
-        <item name="windowNoTitle">true</item>
+    <style name="AppTheme.DialogAlert" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
     </style>
-
-    <style name="AppTheme.DialogAlert" parent="@android:style/Theme.DeviceDefault.Light.Dialog.Alert"/>
-
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
-
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
-
-    <style name="LeakCanaryTheme" parent="android:Theme.Material"/>
-
-    <style name="PhotoCrop.ActivityTheme" parent="Theme.AppCompat">
-        <item name="colorPrimary">@android:color/transparent</item>
-        <item name="colorPrimaryDark">@android:color/transparent</item>
-        <item name="android:colorPrimary">@android:color/transparent</item>
-        <item name="android:colorPrimaryDark">@android:color/transparent</item>
-        <item name="android:colorBackgroundCacheHint">@null</item>
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@color/cropper_bg_glass</item>
-        <item name="android:windowTranslucentStatus">true</item>
-    </style>
-
-    <style name="RestoreActivity.ActivityTheme" parent="@android:style/Theme.NoDisplay"/>
-
-    <style name="RestoreDialog" parent="@android:style/Theme.DeviceDefault.Light.Dialog.Alert"/>
 
     <style name="TextAppearance.ExpandedTitle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
         <item name="android:textSize">26sp</item>
-    </style>
-
-    <style name="SplashScreen.ActivityTheme" parent="Theme.AppCompat">
-        <item name="android:navigationBarColor">@color/splashscreen_background</item>
-        <item name="android:statusBarColor">@color/splashscreen_background</item>
-        <item name="android:windowLightStatusBar">@bool/SplashscreenWindowLightStatusBar</item>
-    </style>
-
-    <style name="SubstratumBuilder.ActivityTheme" parent="Theme.AppCompat">
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:textColor">@color/dialog_text_color</item>
-        <item name="android:windowAnimationStyle">@style/SubstratumBuilder.WindowAnimation</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowTranslucentStatus">true</item>
-    </style>
-
-    <style name="SubstratumBuilder.BlurView" parent="@android:style/Theme.Material.Wallpaper">
-        <item name="android:colorPrimaryDark">@android:color/transparent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:textColor">@color/dialog_text_color</item>
-        <item name="android:windowAnimationStyle">@style/SubstratumBuilder.WindowAnimation</item>
-        <item name="android:windowBackground">@color/window_bg_glass</item>
-    </style>
-
-    <style name="SubstratumBuilder.WindowAnimation" parent="Animation.AppCompat.Dialog">
-        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
-        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
     </style>
 
     <style name="Theme.AppCompat.Translucent">
@@ -94,7 +43,6 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsFloating">true</item>
         <item name="android:backgroundDimEnabled">false</item>
-        <item name="android:windowAnimationStyle">@style/SubstratumBuilder.WindowAnimation</item>
     </style>
 
     <style name="Widget.MaterialSheetFab.Sheet" parent="">
@@ -119,25 +67,5 @@
         <item name="android:textSize">@dimen/sheet_item_textsize</item>
         <item name="android:textColor">@color/fab_menu_text_color</item>
         <item name="android:drawablePadding">@dimen/sheet_item_image_spacing</item>
-    </style>
-
-    <style name="AppTheme.Dialog" parent="Theme.AppCompat.Light.Dialog">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
-
-    <style name="ShowcaseDialog" parent="Theme.AppCompat.Light.Dialog">
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowActionBar">false</item>
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-
-    <style name="RestoreInfo" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowActionBar">false</item>
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
     </style>
 </resources>
