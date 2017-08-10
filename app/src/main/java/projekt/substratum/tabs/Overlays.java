@@ -422,7 +422,10 @@ public class Overlays extends Fragment {
             LayoutInflater inflater,
             ViewGroup container,
             Bundle savedInstanceState) {
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.tab_overlays, container, false);
+        return inflater.inflate(R.layout.tab_overlays, container, false);
+    }
+
+    public boolean init(String themeName, String themePid, byte[] encryption_key, byte[] iv_encrypt_key) {
         prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         am = (ActivityManager) getContext().getSystemService(Activity.ACTIVITY_SERVICE);
@@ -435,14 +438,12 @@ public class Overlays extends Fragment {
         localBroadcastManager = LocalBroadcastManager.getInstance(getContext());
         localBroadcastManager.registerReceiver(refreshReceiver, filter);
 
-        theme_name = OmniActivity.getThemeName();
-        theme_pid = OmniActivity.getThemePID();
+        theme_name = themeName;
+        theme_pid = themePid;
         String encrypt_check =
                 References.getOverlayMetadata(getContext(), theme_pid, metadataEncryption);
 
         if (encrypt_check != null && encrypt_check.equals(metadataEncryptionValue)) {
-            byte[] encryption_key = OmniActivity.getEncryptionKey();
-            byte[] iv_encrypt_key = OmniActivity.getIVEncryptKey();
             try {
                 cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 cipher.init(
@@ -462,22 +463,22 @@ public class Overlays extends Fragment {
         }
 
         if (decryptedAssetsExceptionReached) {
-            getActivity().finish();
+           return false;
         }
 
         mixAndMatchMode = prefs.getBoolean("enable_swapping_overlays", false);
 
-        materialProgressBar = (ProgressBar) root.findViewById(R.id.progress_bar_loader);
+        materialProgressBar = (ProgressBar) getView().findViewById(R.id.progress_bar_loader);
 
         // Pre-initialize the adapter first so that it won't complain for skipping layout on logs
-        mRecyclerView = (RecyclerView) root.findViewById(R.id.overlayRecyclerView);
+        mRecyclerView = (RecyclerView) getView().findViewById(R.id.overlayRecyclerView);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         ArrayList<OverlaysItem> empty_array = new ArrayList<>();
         RecyclerView.Adapter empty_adapter = new OverlaysAdapter(empty_array);
         mRecyclerView.setAdapter(empty_adapter);
 
-        TextView toggle_all_overlays_text = (TextView) root.findViewById(R.id.toggle_all_overlays_text);
+        TextView toggle_all_overlays_text = (TextView) getView().findViewById(R.id.toggle_all_overlays_text);
         toggle_all_overlays_text.setVisibility(View.VISIBLE);
 
         File work_area = new File(Environment.getExternalStorageDirectory().getAbsolutePath() +
@@ -487,7 +488,7 @@ public class Overlays extends Fragment {
         }
 
         // Adjust the behaviour of the mix and match toggle in the sheet
-        toggle_all = (Switch) root.findViewById(R.id.toggle_all_overlays);
+        toggle_all = (Switch) getView().findViewById(R.id.toggle_all_overlays);
         toggle_all.setOnCheckedChangeListener(
                 (buttonView, isChecked) -> {
                     try {
@@ -503,7 +504,7 @@ public class Overlays extends Fragment {
                 });
 
         // Allow the user to toggle the select all switch by clicking on the bar above
-        RelativeLayout toggleZone = (RelativeLayout) root.findViewById(R.id.toggle_zone);
+        RelativeLayout toggleZone = (RelativeLayout) getView().findViewById(R.id.toggle_zone);
         toggleZone.setOnClickListener(v -> {
             try {
                 toggle_all.setChecked(!toggle_all.isChecked());
@@ -519,7 +520,7 @@ public class Overlays extends Fragment {
         });
 
         // Allow the user to swipe down to refresh the overlay list
-        swipeRefreshLayout = (SwipeRefreshLayout) root.findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout = (SwipeRefreshLayout) getView().findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(() -> {
             overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
             for (int i = 0; i < overlaysLists.size(); i++) {
@@ -536,7 +537,7 @@ public class Overlays extends Fragment {
         /*
           PLUGIN TYPE 3: Parse each overlay folder to see if they have folder options
          */
-        base_spinner = (Spinner) root.findViewById(R.id.type3_spinner);
+        base_spinner = (Spinner) getView().findViewById(R.id.type3_spinner);
         Overlays overlays = this;
         base_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -646,6 +647,9 @@ public class Overlays extends Fragment {
                 toggle_all_overlays_text.setVisibility(View.VISIBLE);
                 base_spinner.setVisibility(View.INVISIBLE);
             }
+            if (materialProgressBar != null) {
+                materialProgressBar.setVisibility(View.GONE);
+            }
             e.printStackTrace();
             Log.e(TAG, "Could not parse list of base options for this theme!");
         }
@@ -655,7 +659,7 @@ public class Overlays extends Fragment {
         IntentFilter intentFilter = new IntentFilter("Overlays.START_JOB");
         localBroadcastManager2 = LocalBroadcastManager.getInstance(getContext());
         localBroadcastManager2.registerReceiver(jobReceiver, intentFilter);
-        return root;
+        return true;
     }
 
     protected List<String> updateEnabledOverlays() {

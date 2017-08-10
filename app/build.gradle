@@ -29,17 +29,11 @@ def gitHash = { ->
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion '25.0.3'
 
     lintOptions {
         checkReleaseBuilds false
         abortOnError false
-    }
-
-    android.applicationVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = "substratum_beta_${variant.versionCode}_${gitHash()}.apk"
-        }
     }
 
     defaultConfig {
@@ -50,6 +44,9 @@ android {
         versionName "eight hundred fifteen"
         buildConfigField "java.util.Date", "buildTime", "new java.util.Date(" + System.currentTimeMillis() + "L)"
         buildConfigField "String", "GIT_HASH", "\"${gitHash()}\""
+        jackOptions {
+            enabled true
+        }
     }
 
     buildTypes {
@@ -65,20 +62,6 @@ android {
         }
     }
 
-    flavorDimensions "preview"
-    productFlavors {
-        main {}
-        preview {
-            targetSdkVersion 25
-            versionNameSuffix " (target-preview)"
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
     dexOptions {
         javaMaxHeapSize '2048m'
     }
@@ -86,6 +69,10 @@ android {
     packagingOptions {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 

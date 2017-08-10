@@ -44,6 +44,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatImageView;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -65,22 +66,19 @@ import projekt.substratum.common.References;
 import projekt.substratum.common.commands.ElevatedCommands;
 import projekt.substratum.common.commands.FileOperations;
 import projekt.substratum.common.platform.ThemeManager;
+import projekt.substratum.tabs.Overlays;
 import projekt.substratum.util.files.Root;
 import projekt.substratum.util.injectors.AOPTCheck;
 
 import static android.content.om.OverlayInfo.STATE_APPROVED_DISABLED;
 import static android.content.om.OverlayInfo.STATE_APPROVED_ENABLED;
+import static android.util.Base64.DEFAULT;
 import static projekt.substratum.common.References.BYPASS_SUBSTRATUM_BUILDER_DELETION;
 import static projekt.substratum.common.References.MANAGER_REFRESH;
 import static projekt.substratum.common.References.metadataOverlayParent;
 
 public class OmniActivity extends SubstratumActivity {
 
-    public static String theme_name;
-    public static String theme_pid;
-    public static String theme_mode;
-    public static byte[] encryption_key;
-    public static byte[] iv_encrypt_key;
     private Boolean uninstalled = false;
     private byte[] byteArray;
     private SharedPreferences prefs;
@@ -90,6 +88,10 @@ public class OmniActivity extends SubstratumActivity {
     private BroadcastReceiver refreshReceiver;
     private boolean mStoragePerms;
     private FloatingActionButton floatingActionButton;
+    private String theme_pid;
+    private String theme_name;
+    private byte[] encryption_key;
+    private byte[] iv_encrypt_key;
 
     private class FabDialog extends Dialog implements View.OnClickListener {
         private Switch enable_swap;
@@ -174,22 +176,6 @@ public class OmniActivity extends SubstratumActivity {
 
     private static final int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
-    public static String getThemeName() {
-        return theme_name;
-    }
-
-    public static String getThemePID() {
-        return theme_pid;
-    }
-
-    public static byte[] getEncryptionKey() {
-        return encryption_key;
-    }
-
-    public static byte[] getIVEncryptKey() {
-        return iv_encrypt_key;
-    }
-
     private static void setOverflowButtonColor(final Activity activity, final Boolean dark_mode) {
         @SuppressLint("PrivateResource") final String overflowDescription =
                 activity.getString(R.string.abc_action_menu_overflow_description);
@@ -219,21 +205,38 @@ public class OmniActivity extends SubstratumActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         Intent currentIntent = getIntent();
         theme_name = currentIntent.getStringExtra("theme_name");
         theme_pid = currentIntent.getStringExtra("theme_pid");
-        theme_mode = currentIntent.getStringExtra("theme_mode");
         encryption_key = currentIntent.getByteArrayExtra("encryption_key");
         iv_encrypt_key = currentIntent.getByteArrayExtra("iv_encrypt_key");
 
-        if (theme_mode == null) {
-            theme_mode = "";
+        if (theme_pid == null) {
+            theme_name = prefs.getString("theme_name", null);
+            theme_pid = prefs.getString("theme_pid", null);
+            String s = prefs.getString("encryption_key", null);
+            if (s != null) {
+                encryption_key = Base64.decode(s, DEFAULT);
+            }
+            s = prefs.getString("iv_encrypt_key", null);
+            if (s != null) {
+                iv_encrypt_key = Base64.decode(s, DEFAULT);
+            }
+        } else {
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.remove("theme_name");
+            editor.remove("theme_pid");
+            editor.remove("encryption_key");
+            editor.remove("iv_encrypt_key");
+            editor.commit();
+        }
+        if (theme_pid == null) {
+            finish();
         }
 
         setContentView(R.layout.information_activity);
-
-        prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         // Register the theme install receiver to auto refresh the fragment
         refreshReceiver = new RefreshReceiver();
@@ -264,12 +267,9 @@ public class OmniActivity extends SubstratumActivity {
         getSupportActionBar().setHomeAsUpIndicator(upArrow);
         setOverflowButtonColor(this, false);
 
-        final FabDialog sheetDialog = new FabDialog(this);
-
-        LocalBroadcastManager localBroadcastManager =
-                LocalBroadcastManager.getInstance(getApplicationContext());
         floatingActionButton.setOnClickListener(v -> {
             try {
+                final FabDialog sheetDialog = new FabDialog(this);
                 sheetDialog.show();
             } catch (NullPointerException npe) {
                 // Suppress warning
@@ -278,6 +278,11 @@ public class OmniActivity extends SubstratumActivity {
 
         requestStoragePermissions();
         new AOPTCheck().injectAOPT(this, false);
+
+        Overlays fragment = (Overlays) getSupportFragmentManager().findFragmentById(R.id.overlays);
+        if (!fragment.init(theme_name, theme_pid, encryption_key, iv_encrypt_key)) {
+            finish();
+        }
     }
 
     @Override
@@ -539,13 +544,6 @@ public class OmniActivity extends SubstratumActivity {
             // Unregistered already
         }
 
-        // Reset all of the parameters of this IA instance
-        theme_name = null;
-        theme_pid = null;
-        theme_mode = null;
-        encryption_key = null;
-        iv_encrypt_key = null;
-
         if (!BYPASS_SUBSTRATUM_BUILDER_DELETION &&
                 !References.isCachingEnabled(getApplicationContext())) {
             String workingDirectory =
@@ -555,6 +553,22 @@ public class OmniActivity extends SubstratumActivity {
             if (!deleted.exists()) Log.d(References.SUBSTRATUM_BUILDER,
                     "Successfully cleared Substratum cache!");
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // save state
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("theme_name", theme_name);
+        editor.putString("theme_pid", theme_pid);
+        if (encryption_key != null) {
+            editor.putString("encryption_key", Base64.encodeToString(encryption_key, DEFAULT));
+        }
+        if (iv_encrypt_key != null) {
+            editor.putString("iv_encrypt_key", Base64.encodeToString(iv_encrypt_key, DEFAULT));
+        }
+        editor.commit();
     }
 
     private class uninstallTheme extends AsyncTask<String, Integer, String> {
