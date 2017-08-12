@@ -24,7 +24,10 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:navigationBarColor">@color/navigationBarColor</item>
         <item name="alertDialogTheme">@style/AppTheme.DialogAlert</item>
+        <item name="android:itemBackground">@color/colorPrimary</item>
     </style>
+
+    <style name="ActionBarPopupTheme" parent="Theme.AppCompat" />
 
     <style name="AppTheme.DialogAlert" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="colorPrimary">@color/colorPrimary</item>
