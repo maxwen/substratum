@@ -604,8 +604,7 @@ public class Overlays extends Fragment {
 
                 try (BufferedReader reader = new BufferedReader(
                         new InputStreamReader(inputStream))) {
-                    String formatter = String.format(
-                            getString(R.string.overlays_variant_substitute), reader.readLine());
+                    String formatter = reader.readLine();
                     type3.add(new VariantItem(formatter, null));
                 } catch (IOException e) {
                     Log.e(TAG, "There was an error parsing asset file!");
@@ -627,7 +626,7 @@ public class Overlays extends Fragment {
                         type3.add(new VariantItem(current.substring(6), null));
                     }
                 }
-                VariantAdapter adapter1 = new VariantAdapter(getActivity(), type3);
+                VariantAdapter adapter1 = new VariantAdapter(getActivity(), type3, R.layout.preview_spinner_dark);
                 if (type3.size() > 1) {
                     toggle_all_overlays_text.setVisibility(View.GONE);
                     base_spinner.setVisibility(View.VISIBLE);
@@ -854,9 +853,7 @@ public class Overlays extends Fragment {
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(inputStream))) {
             // This adjusts it so that we have the spinner text set
-            String formatter = String.format(
-                    getString(R.string.overlays_variant_substitute),
-                    reader.readLine());
+            String formatter = reader.readLine();
             // This is the default type1 xml hex, if present
             String hex = null;
 
@@ -920,8 +917,7 @@ public class Overlays extends Fragment {
 
     public VariantItem setTypeTwoSpinners(InputStreamReader inputStreamReader) {
         try (BufferedReader reader = new BufferedReader(inputStreamReader)) {
-            return new VariantItem(String.format(getString(R.string
-                    .overlays_variant_substitute), reader.readLine()), null);
+            return new VariantItem(reader.readLine(), null);
         } catch (Exception e) {
             Log.d(TAG, "Falling back to default base variant text...");
             return new VariantItem(getString(R.string.overlays_variant_default_2), null);
@@ -1381,10 +1377,10 @@ public class Overlays extends Fragment {
                                 }
                             }
 
-                            VariantAdapter adapter1 = new VariantAdapter(context, type1a);
-                            VariantAdapter adapter2 = new VariantAdapter(context, type1b);
-                            VariantAdapter adapter3 = new VariantAdapter(context, type1c);
-                            VariantAdapter adapter4 = new VariantAdapter(context, type2);
+                            VariantAdapter adapter1 = new VariantAdapter(context, type1a, R.layout.preview_spinner);
+                            VariantAdapter adapter2 = new VariantAdapter(context, type1b, R.layout.preview_spinner);
+                            VariantAdapter adapter3 = new VariantAdapter(context, type1c, R.layout.preview_spinner);
+                            VariantAdapter adapter4 = new VariantAdapter(context, type2, R.layout.preview_spinner);
 
                             boolean adapterOneChecker = type1a.size() == 0;
                             boolean adapterTwoChecker = type1b.size() == 0;

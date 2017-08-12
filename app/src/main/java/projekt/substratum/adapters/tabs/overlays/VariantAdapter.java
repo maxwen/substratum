@@ -36,9 +36,11 @@ import java.util.ArrayList;
 import projekt.substratum.common.References;
 
 public class VariantAdapter extends ArrayAdapter<VariantItem> {
+    private int mResourceId;
 
-    public VariantAdapter(Context context, ArrayList<VariantItem> variantItemArrayList) {
-        super(context, R.layout.preview_spinner, R.id.variant_name, variantItemArrayList);
+    public VariantAdapter(Context context, ArrayList<VariantItem> variantItemArrayList, int resourceId) {
+        super(context, resourceId, R.id.variant_name, variantItemArrayList);
+        mResourceId = resourceId;
     }
 
     @Override
@@ -57,7 +59,7 @@ public class VariantAdapter extends ArrayAdapter<VariantItem> {
 
         if (convertView == null) {
             convertView = LayoutInflater.from(
-                    this.getContext()).inflate(R.layout.preview_spinner, parent, false);
+                    this.getContext()).inflate(mResourceId, parent, false);
 
             holder = new ViewHolder();
             holder.variantName = (TextView) convertView.findViewById(R.id.variant_name);

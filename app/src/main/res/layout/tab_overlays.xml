@@ -30,12 +30,11 @@
         <RelativeLayout
             android:id="@+id/toggle_zone"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:layout_marginEnd="7dp"
-            android:layout_marginStart="14dp"
-            android:layout_marginTop="12dp"
-            android:clickable="true">
+            android:layout_height="48dp"
+            android:clickable="true"
+            android:paddingStart="16dp"
+            android:paddingEnd="10dp"
+            android:background="@color/colorPrimary" >
 
             <TextView
                 android:id="@+id/toggle_all_overlays_text"
@@ -43,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="8dp"
                 android:text="@string/select_to_toggle_all_overlays"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textColor="@color/information_activity_light_icon_mode"
                 android:textSize="15sp"/>
 
             <Spinner
@@ -53,7 +52,8 @@
                 android:layout_marginBottom="-12dp"
                 android:layout_marginStart="-7dp"
                 android:layout_marginTop="-10dp"
-                android:layout_toStartOf="@+id/toggle_all_overlays"/>
+                android:layout_toStartOf="@+id/toggle_all_overlays"
+                android:backgroundTint="@color/information_activity_light_icon_mode" />
 
             <Switch
                 android:id="@+id/toggle_all_overlays"
@@ -84,9 +84,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_below="@id/type3_spinner"
-                android:layout_marginEnd="5dp"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="2dp"
                 android:clipToPadding="false"
                 android:paddingBottom="90dp"
                 android:scrollbars="vertical"/>
