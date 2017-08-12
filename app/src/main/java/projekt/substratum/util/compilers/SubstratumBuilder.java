@@ -338,77 +338,77 @@ public class SubstratumBuilder {
 
         // 7. Sign the apk
         if (!has_errored_out) {
-            try {
-                // Delete the previous APK if it exists in the dashboard folder
-                FileOperations.delete(context, Environment.getExternalStorageDirectory()
-                        .getAbsolutePath() +
-                        EXTERNAL_STORAGE_CACHE + overlay_package + "." + parse2_themeName +
-                        "-signed.apk");
-
-                // Sign with the built-in test key/certificate.
-                String source = work_area + "/" + overlay_package + "." + parse2_themeName +
-                        "-unsigned.apk";
-                if (!new File(source).exists()) {
-                    has_errored_out = true;
-                    return has_errored_out;
-                }
-                String destination = Environment.getExternalStorageDirectory().getAbsolutePath() +
-                        EXTERNAL_STORAGE_CACHE + overlay_package + "." + parse2_themeName +
-                        "-signed.apk";
-
-                File key = new File(context.getDataDir() + "/key");
-                char[] keyPass = "overlay".toCharArray();
-
-                if (!key.exists()) {
-                    Log.d(SUBSTRATUM_BUILDER, "generating new keystore...");
-                    // Generate private key
-                    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-                    keyGen.initialize(1024, SecureRandom.getInstance("SHA1PRNG"));
-                    KeyPair keyPair = keyGen.generateKeyPair();
-                    PrivateKey privateKey = keyPair.getPrivate();
-
-                    // Generate certificate
-                    X509Certificate[] chain = new X509Certificate[1];
-                    X509Certificate certificate =
-                            CertificateGenerator.generateX509Certificate(keyPair);
-                    chain[0] = certificate;
-
-                    // Store new keystore
-                    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                    keyStore.load(null, null);
-                    keyStore.setKeyEntry("key", privateKey, keyPass, chain);
-                    keyStore.setCertificateEntry("cert", certificate);
-                    keyStore.store(new FileOutputStream(key), keyPass);
-                }
-
-                KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                keyStore.load(new FileInputStream(key), keyPass);
-                PrivateKey privateKey = (PrivateKey) keyStore.getKey("key", keyPass);
-                List<X509Certificate> certs = new ArrayList<>();
-                certs.add((X509Certificate) keyStore.getCertificateChain("key")[0]);
-
-                ApkSigner.SignerConfig signerConfig =
-                        new ApkSigner.SignerConfig.Builder("overlay", privateKey, certs).build();
-                List<ApkSigner.SignerConfig> signerConfigs = new ArrayList<>();
-                signerConfigs.add(signerConfig);
-                ApkSigner.Builder apkSigner = new ApkSigner.Builder(signerConfigs);
-                apkSigner
-                        .setV1SigningEnabled(false)
-                        .setV2SigningEnabled(true)
-                        .setInputApk(new File(source))
-                        .setOutputApk(new File(destination))
-                        .setMinSdkVersion(Build.VERSION.SDK_INT)
-                        .build()
-                        .sign();
-
-                Log.d(References.SUBSTRATUM_BUILDER, "APK successfully signed!");
-            } catch (Throwable t) {
-                t.printStackTrace();
+            // Sign with the built-in test key/certificate.
+            String source = work_area + "/" + overlay_package + "." + parse2_themeName +
+                    "-unsigned.apk";
+            if (!new File(source).exists()) {
                 dumpErrorLogs(References.SUBSTRATUM_BUILDER, overlay_package,
-                        "APK could not be signed. " + t.toString());
+                        "Creating unsigned apk faild " + source);
                 has_errored_out = true;
-                dumpErrorLogs(References.SUBSTRATUM_BUILDER, overlay_package,
-                        "Installation of \"" + overlay_package + "\" has failed.");
+            } else {
+                try {
+                    // Delete the previous APK if it exists in the dashboard folder
+                    String destination = Environment.getExternalStorageDirectory().getAbsolutePath() +
+                            EXTERNAL_STORAGE_CACHE + overlay_package + "." + parse2_themeName +
+                            "-signed.apk";
+                    if (new File(destination).exists()) {
+                        FileOperations.delete(context, destination);
+                    }
+
+                    File key = new File(context.getDataDir() + "/key");
+                    char[] keyPass = "overlay".toCharArray();
+
+                    if (!key.exists()) {
+                        Log.d(SUBSTRATUM_BUILDER, "generating new keystore...");
+                        // Generate private key
+                        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+                        keyGen.initialize(1024, SecureRandom.getInstance("SHA1PRNG"));
+                        KeyPair keyPair = keyGen.generateKeyPair();
+                        PrivateKey privateKey = keyPair.getPrivate();
+
+                        // Generate certificate
+                        X509Certificate[] chain = new X509Certificate[1];
+                        X509Certificate certificate =
+                                CertificateGenerator.generateX509Certificate(keyPair);
+                        chain[0] = certificate;
+
+                        // Store new keystore
+                        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                        keyStore.load(null, null);
+                        keyStore.setKeyEntry("key", privateKey, keyPass, chain);
+                        keyStore.setCertificateEntry("cert", certificate);
+                        keyStore.store(new FileOutputStream(key), keyPass);
+                    }
+
+                    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                    keyStore.load(new FileInputStream(key), keyPass);
+                    PrivateKey privateKey = (PrivateKey) keyStore.getKey("key", keyPass);
+                    List<X509Certificate> certs = new ArrayList<>();
+                    certs.add((X509Certificate) keyStore.getCertificateChain("key")[0]);
+
+                    ApkSigner.SignerConfig signerConfig =
+                            new ApkSigner.SignerConfig.Builder("overlay", privateKey, certs).build();
+                    List<ApkSigner.SignerConfig> signerConfigs = new ArrayList<>();
+                    signerConfigs.add(signerConfig);
+                    ApkSigner.Builder apkSigner = new ApkSigner.Builder(signerConfigs);
+                    apkSigner
+                            .setV1SigningEnabled(false)
+                            .setV2SigningEnabled(true)
+                            .setInputApk(new File(source))
+                            .setOutputApk(new File(destination))
+                            .setMinSdkVersion(Build.VERSION.SDK_INT)
+                            .build()
+                            .sign();
+
+                    Log.d(References.SUBSTRATUM_BUILDER, "APK successfully signed!");
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    dumpErrorLogs(References.SUBSTRATUM_BUILDER, overlay_package,
+                            "APK could not be signed. " + t.toString());
+                    has_errored_out = true;
+                    dumpErrorLogs(References.SUBSTRATUM_BUILDER, overlay_package,
+                            "Installation of \"" + overlay_package + "\" has failed.");
+                }
             }
         }
 
