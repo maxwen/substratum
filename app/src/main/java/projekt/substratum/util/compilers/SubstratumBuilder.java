@@ -348,6 +348,10 @@ public class SubstratumBuilder {
                 // Sign with the built-in test key/certificate.
                 String source = work_area + "/" + overlay_package + "." + parse2_themeName +
                         "-unsigned.apk";
+                if (!new File(source).exists()) {
+                    has_errored_out = true;
+                    return has_errored_out;
+                }
                 String destination = Environment.getExternalStorageDirectory().getAbsolutePath() +
                         EXTERNAL_STORAGE_CACHE + overlay_package + "." + parse2_themeName +
                         "-signed.apk";

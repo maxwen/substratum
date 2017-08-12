@@ -255,6 +255,7 @@ public class OmniActivity extends SubstratumActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setElevation(8.0f);
         }
         if (toolbar != null) toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
