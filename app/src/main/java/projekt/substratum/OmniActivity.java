@@ -61,7 +61,7 @@ import projekt.substratum.common.References;
 import projekt.substratum.common.commands.FileOperations;
 import projekt.substratum.common.platform.ThemeManager;
 import projekt.substratum.tabs.Overlays;
-import projekt.substratum.util.injectors.AOPTCheck;
+import projekt.substratum.util.injectors.CheckBinaries;
 
 import static android.content.om.OverlayInfo.STATE_APPROVED_DISABLED;
 import static android.content.om.OverlayInfo.STATE_APPROVED_ENABLED;
@@ -267,7 +267,7 @@ public class OmniActivity extends SubstratumActivity {
         });
 
         requestStoragePermissions();
-        new AOPTCheck().injectAOPT(this, false);
+        CheckBinaries.install(this, true);
 
         Overlays fragment = (Overlays) getSupportFragmentManager().findFragmentById(R.id.overlays);
         if (fragment != null && !fragment.init(theme_name, theme_pid, encryption_key, iv_encrypt_key)) {
