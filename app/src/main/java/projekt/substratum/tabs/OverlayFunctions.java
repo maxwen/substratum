@@ -50,6 +50,7 @@ import projekt.substratum.OmniActivity;
 import projekt.substratum.Substratum;
 import projekt.substratum.adapters.tabs.overlays.OverlaysAdapter;
 import projekt.substratum.adapters.tabs.overlays.OverlaysItem;
+import projekt.substratum.adapters.tabs.overlays.VariantItem;
 import projekt.substratum.common.References;
 import projekt.substratum.common.commands.ElevatedCommands;
 import projekt.substratum.common.commands.FileOperations;
@@ -350,12 +351,18 @@ class OverlayFunctions {
                 fragment.type2 = "";
                 fragment.type3 = "";
 
+                OverlaysItem overlayItem = fragment.checkedOverlays.get(i);
                 fragment.current_amount = i + 1;
                 String theme_name_parsed =
                         fragment.theme_name.replaceAll("\\s+", "").replaceAll("[^a-zA-Z0-9]+", "");
-                String current_overlay = fragment.checkedOverlays.get(i).getPackageName();
+                String current_overlay = overlayItem.getPackageName();
                 fragment.current_dialog_overlay =
                         "'" + References.grabPackageName(context, current_overlay) + "'";
+
+                fragment.setType1Value(current_overlay, "type1a_value", overlayItem.getSelectedVariantName());
+                fragment.setType1Value(current_overlay, "type1b_value", overlayItem.getSelectedVariantName2());
+                fragment.setType1Value(current_overlay, "type1c_value", overlayItem.getSelectedVariantName3());
+                fragment.setType2Value(current_overlay, "type2_value", overlayItem.getSelectedVariantName4());
 
                 if (!fragment.enable_mode && !fragment.disable_mode) {
                     publishProgress((int) fragment.current_amount);
@@ -363,8 +370,7 @@ class OverlayFunctions {
                         if (fragment.final_runner == null) {
                             fragment.final_runner = new ArrayList<>();
                         }
-                        String package_name = fragment.checkedOverlays.get(i)
-                                .getFullOverlayParameters();
+                        String package_name = overlayItem.getFullOverlayParameters();
                         if (References.isPackageInstalled(context, package_name) ||
                                 fragment.compile_enable_mode) {
                             fragment.final_runner.add(package_name);
@@ -466,15 +472,14 @@ class OverlayFunctions {
                             );
                         }
 
-                        if (fragment.checkedOverlays.get(i).is_variant_chosen ||
+                        if (overlayItem.is_variant_chosen ||
                                 sUrl[0].length() != 0) {
                             // Type 1a
-                            if (fragment.checkedOverlays.get(i).is_variant_chosen1) {
-                                fragment.type1a =
-                                        fragment.checkedOverlays.get(i).getSelectedVariantName();
+                            if (overlayItem.is_variant_chosen1) {
+                                fragment.type1a = overlayItem.getSelectedVariantName();
                                 if (References.isCachingEnabled(context)) {
                                     String sourceLocation = workingDirectory + "/type1a_" +
-                                            fragment.checkedOverlays.get(i).getSelectedVariantName()
+                                            overlayItem.getSelectedVariantName()
                                             + ".xml";
 
                                     String targetLocation = workingDirectory +
@@ -482,8 +487,7 @@ class OverlayFunctions {
 
                                     Log.d(Overlays.TAG,
                                             "You have selected variant file \"" +
-                                                    fragment.checkedOverlays.get(i)
-                                                            .getSelectedVariantName() + "\"");
+                                                    overlayItem.getSelectedVariantName() + "\"");
                                     Log.d(Overlays.TAG, "Moving variant file to: " +
                                             targetLocation);
                                     FileOperations.copy(
@@ -492,7 +496,7 @@ class OverlayFunctions {
                                             targetLocation);
                                 } else {
                                     Log.d(Overlays.TAG, "You have selected variant file \"" +
-                                            fragment.checkedOverlays.get(i).getSelectedVariantName()
+                                            overlayItem.getSelectedVariantName()
                                             + "\"");
                                     Log.d(Overlays.TAG, "Moving variant file to: " +
                                             workingDirectory + suffix + "/values/type1a.xml");
@@ -500,8 +504,7 @@ class OverlayFunctions {
                                     String to_copy =
                                             Overlays.overlaysDir + "/" + current_overlay +
                                                     "/type1a_" +
-                                                    fragment.checkedOverlays.get(i)
-                                                            .getSelectedVariantName() +
+                                                    overlayItem.getSelectedVariantName() +
                                                     (fragment.encrypted ? ".xml.enc" : ".xml");
 
                                     FileOperations.copyFileOrDir(
@@ -517,19 +520,18 @@ class OverlayFunctions {
                             }
 
                             // Type 1b
-                            if (fragment.checkedOverlays.get(i).is_variant_chosen2) {
-                                fragment.type1b =
-                                        fragment.checkedOverlays.get(i).getSelectedVariantName2();
+                            if (overlayItem.is_variant_chosen2) {
+                                fragment.type1b = overlayItem.getSelectedVariantName2();
                                 if (References.isCachingEnabled(context)) {
                                     String sourceLocation2 = workingDirectory + "/type1b_" +
-                                            fragment.checkedOverlays.get(i)
+                                            overlayItem
                                                     .getSelectedVariantName2() + ".xml";
 
                                     String targetLocation2 = workingDirectory +
                                             "/workdir/values/type1b.xml";
 
                                     Log.d(Overlays.TAG, "You have selected variant file \"" +
-                                            fragment.checkedOverlays.get(i)
+                                            overlayItem
                                                     .getSelectedVariantName2() + "\"");
                                     Log.d(Overlays.TAG, "Moving variant file to: " +
                                             targetLocation2);
@@ -537,7 +539,7 @@ class OverlayFunctions {
                                             targetLocation2);
                                 } else {
                                     Log.d(Overlays.TAG, "You have selected variant file \"" +
-                                            fragment.checkedOverlays.get(i)
+                                            overlayItem
                                                     .getSelectedVariantName2() + "\"");
                                     Log.d(Overlays.TAG, "Moving variant file to: " +
                                             workingDirectory + suffix + "/values/type1b.xml");
@@ -545,7 +547,7 @@ class OverlayFunctions {
                                     String to_copy =
                                             Overlays.overlaysDir + "/" + current_overlay +
                                                     "/type1b_" +
-                                                    fragment.checkedOverlays.get(i)
+                                                    overlayItem
                                                             .getSelectedVariantName2() +
                                                     (fragment.encrypted ? ".xml.enc" : ".xml");
 
@@ -561,19 +563,18 @@ class OverlayFunctions {
                                 }
                             }
                             // Type 1c
-                            if (fragment.checkedOverlays.get(i).is_variant_chosen3) {
-                                fragment.type1c =
-                                        fragment.checkedOverlays.get(i).getSelectedVariantName3();
+                            if (overlayItem.is_variant_chosen3) {
+                                fragment.type1c = overlayItem.getSelectedVariantName3();
                                 if (References.isCachingEnabled(context)) {
                                     String sourceLocation3 = workingDirectory + "/type1c_" +
-                                            fragment.checkedOverlays.get(i)
+                                            overlayItem
                                                     .getSelectedVariantName3() + ".xml";
 
                                     String targetLocation3 = workingDirectory +
                                             "/workdir/values/type1c.xml";
 
                                     Log.d(Overlays.TAG, "You have selected variant file \"" +
-                                            fragment.checkedOverlays.get(i)
+                                            overlayItem
                                                     .getSelectedVariantName3() + "\"");
                                     Log.d(Overlays.TAG, "Moving variant file to: " +
                                             targetLocation3);
@@ -584,7 +585,7 @@ class OverlayFunctions {
                                             targetLocation3);
                                 } else {
                                     Log.d(Overlays.TAG, "You have selected variant file \"" +
-                                            fragment.checkedOverlays.get(i)
+                                            overlayItem
                                                     .getSelectedVariantName3() + "\"");
                                     Log.d(Overlays.TAG, "Moving variant file to: " +
                                             workingDirectory + suffix + "/values/type1c.xml");
@@ -592,7 +593,7 @@ class OverlayFunctions {
                                     String to_copy =
                                             Overlays.overlaysDir + "/" + current_overlay +
                                                     "/type1c_" +
-                                                    fragment.checkedOverlays.get(i)
+                                                    overlayItem
                                                             .getSelectedVariantName3() +
                                                     (fragment.encrypted ? ".xml.enc" : ".xml");
 
@@ -609,24 +610,23 @@ class OverlayFunctions {
                             }
 
                             String packageName =
-                                    (fragment.checkedOverlays.get(i).is_variant_chosen1 ?
-                                            fragment.checkedOverlays.get(i)
+                                    (overlayItem.is_variant_chosen1 ?
+                                            overlayItem
                                                     .getSelectedVariantName() : "") +
-                                            (fragment.checkedOverlays.get(i).is_variant_chosen2 ?
-                                                    fragment.checkedOverlays.get(i)
+                                            (overlayItem.is_variant_chosen2 ?
+                                                    overlayItem
                                                             .getSelectedVariantName2() : "") +
-                                            (fragment.checkedOverlays.get(i).is_variant_chosen3 ?
-                                                    fragment.checkedOverlays.get(i)
+                                            (overlayItem.is_variant_chosen3 ?
+                                                    overlayItem
                                                             .getSelectedVariantName3() : "").
                                                     replaceAll("\\s+", "").replaceAll
                                                     ("[^a-zA-Z0-9]+", "");
 
-                            if (fragment.checkedOverlays.get(i).is_variant_chosen4) {
-                                packageName = (packageName + fragment.checkedOverlays.get(i)
+                            if (overlayItem.is_variant_chosen4) {
+                                packageName = (packageName + overlayItem
                                         .getSelectedVariantName4()).replaceAll("\\s+", "")
                                         .replaceAll("[^a-zA-Z0-9]+", "");
-                                fragment.type2 = fragment.checkedOverlays.get(i)
-                                        .getSelectedVariantName4();
+                                fragment.type2 = overlayItem.getSelectedVariantName4();
                                 String type2folder = "/type2_" + fragment.type2;
                                 String to_copy = Overlays.overlaysDir + "/" + current_overlay +
                                         type2folder;
@@ -637,7 +637,7 @@ class OverlayFunctions {
                                         to_copy,
                                         fragment.cipher);
                                 Log.d(Overlays.TAG, "Currently processing package" +
-                                        " \"" + fragment.checkedOverlays.get(i)
+                                        " \"" + overlayItem
                                         .getFullOverlayParameters() + "\"...");
 
                                 if (sUrl[0].length() != 0) {
@@ -648,7 +648,7 @@ class OverlayFunctions {
                                             current_overlay,
                                             fragment.theme_name,
                                             packageName,
-                                            fragment.checkedOverlays.get(i)
+                                            overlayItem
                                                     .getSelectedVariantName4(),
                                             sUrl[0],
                                             fragment.versionName,
@@ -670,7 +670,7 @@ class OverlayFunctions {
                                             current_overlay,
                                             fragment.theme_name,
                                             packageName,
-                                            fragment.checkedOverlays.get(i)
+                                            overlayItem
                                                     .getSelectedVariantName4(),
                                             null,
                                             fragment.versionName,
@@ -687,7 +687,7 @@ class OverlayFunctions {
                                 }
                             } else {
                                 Log.d(Overlays.TAG, "Currently processing package" +
-                                        " \"" + fragment.checkedOverlays.get(i)
+                                        " \"" + overlayItem
                                         .getFullOverlayParameters() + "\"...");
 
                                 if (sUrl[0].length() != 0) {
@@ -836,7 +836,7 @@ class OverlayFunctions {
                     if (fragment.enable_mode || fragment.compile_enable_mode ||
                             fragment.disable_mode) {
                         String package_name =
-                                fragment.checkedOverlays.get(i).getFullOverlayParameters();
+                                overlayItem.getFullOverlayParameters();
                         if (References.isPackageInstalled(context, package_name)) {
                             fragment.final_runner.add(package_name);
                         }

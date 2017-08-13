@@ -150,7 +150,7 @@ public class OverlaysItem implements Serializable {
         return spinnerSelection;
     }
 
-    void setSelectedVariant(int position) {
+    public void setSelectedVariant(int position) {
         if (position != 0) {
             is_variant_chosen = true;
             is_variant_chosen1 = true;
@@ -170,7 +170,7 @@ public class OverlaysItem implements Serializable {
         return spinnerSelection2;
     }
 
-    void setSelectedVariant2(int position) {
+    public void setSelectedVariant2(int position) {
         if (position != 0) {
             is_variant_chosen = true;
             is_variant_chosen2 = true;
@@ -185,7 +185,7 @@ public class OverlaysItem implements Serializable {
         return spinnerSelection3;
     }
 
-    void setSelectedVariant3(int position) {
+    public void setSelectedVariant3(int position) {
         if (position != 0) {
             is_variant_chosen = true;
             is_variant_chosen3 = true;
@@ -200,7 +200,7 @@ public class OverlaysItem implements Serializable {
         return spinnerSelection4;
     }
 
-    void setSelectedVariant4(int position) {
+    public void setSelectedVariant4(int position) {
         if (position != 0) {
             is_variant_chosen = true;
             is_variant_chosen4 = true;

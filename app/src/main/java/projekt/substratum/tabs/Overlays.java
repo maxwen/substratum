@@ -52,6 +52,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -542,6 +543,7 @@ public class Overlays extends Fragment {
         base_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1, int pos, long id) {
+                setType3Value(pos);
                 if (pos == 0) {
                     toggle_all.setChecked(false);
                     new LoadOverlays(overlays).execute("");
@@ -557,13 +559,13 @@ public class Overlays extends Fragment {
             }
         });
         base_spinner.setEnabled(false);
+        ArrayList<VariantItem> type3 = new ArrayList<>();
 
         try {
             Resources themeResources = getContext().getPackageManager()
                     .getResourcesForApplication(theme_pid);
             themeAssetManager = themeResources.getAssets();
 
-            ArrayList<VariantItem> type3 = new ArrayList<>();
             ArrayList<String> stringArray = new ArrayList<>();
 
             File f = new File(getContext().getCacheDir().getAbsoluteFile() +
@@ -652,6 +654,9 @@ public class Overlays extends Fragment {
             e.printStackTrace();
             Log.e(TAG, "Could not parse list of base options for this theme!");
         }
+
+        int prefType3Pos = prefs.getInt("type3_value", 0);
+        base_spinner.setSelection(prefType3Pos);
 
         // Enable job listener
         jobReceiver = new JobReceiver();
@@ -1403,6 +1408,59 @@ public class Overlays extends Fragment {
                                             state5overlays,
                                             References.checkOMS(context));
                             fragment.values2.add(overlaysItem);
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Substratum.getInstance().getApplicationContext());
+                            if (type1a.size() != 0) {
+                                String prefType1aValue = prefs.getString("type1a_value" + ":" + package_identifier, null);
+                                if (!TextUtils.isEmpty(prefType1aValue)) {
+                                    int prefPosition = 0;
+                                    for (VariantItem i : type1a) {
+                                        if (prefType1aValue.equals(i.getVariantName())) {
+                                            overlaysItem.setSelectedVariant(prefPosition);
+                                            break;
+                                        }
+                                        prefPosition++;
+                                    }
+                                }
+                            }
+                            if (type1b.size() != 0) {
+                                String prefType1bValue = prefs.getString("type1b_value" + ":" + package_identifier, null);
+                                if (!TextUtils.isEmpty(prefType1bValue)) {
+                                    int prefPosition = 0;
+                                    for (VariantItem i : type1b) {
+                                        if (prefType1bValue.equals(i.getVariantName())) {
+                                            overlaysItem.setSelectedVariant2(prefPosition);
+                                            break;
+                                        }
+                                        prefPosition++;
+                                    }
+                                }
+                            }
+                            if (type1c.size() != 0) {
+                                String prefType1cValue = prefs.getString("type1c_value" + ":" + package_identifier, null);
+                                if (!TextUtils.isEmpty(prefType1cValue)) {
+                                    int prefPosition = 0;
+                                    for (VariantItem i : type1c) {
+                                        if (prefType1cValue.equals(i.getVariantName())) {
+                                            overlaysItem.setSelectedVariant3(prefPosition);
+                                            break;
+                                        }
+                                        prefPosition++;
+                                    }
+                                }
+                            }
+                            if (type2.size() != 0) {
+                                String prefType2Value = prefs.getString("type2_value" + ":" + package_identifier, null);
+                                if (!TextUtils.isEmpty(prefType2Value)) {
+                                    int prefPosition = 0;
+                                    for (VariantItem i : type2) {
+                                        if (prefType2Value.equals(i.getVariantName())) {
+                                            overlaysItem.setSelectedVariant4(prefPosition);
+                                            break;
+                                        }
+                                        prefPosition++;
+                                    }
+                                }
+                            }
                         } else {
                             // At this point, there is no spinner adapter, so it should be null
                             OverlaysItem overlaysItem =
@@ -1528,5 +1586,29 @@ public class Overlays extends Fragment {
         public void onReceive(Context context, Intent intent) {
             refreshList();
         }
+    }
+
+    public void setType1Value(String packageName, String key, String value) {
+        if (!TextUtils.isEmpty(value)) {
+            String type1PrefKey= key + ":" + packageName;
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(type1PrefKey, value);
+            editor.commit();
+        }
+    }
+
+    public void setType2Value(String packageName, String key, String value) {
+        if (!TextUtils.isEmpty(value)) {
+            String type2PrefKey= key + ":" + packageName;
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(type2PrefKey, value);
+            editor.commit();
+        }
+    }
+
+    public void setType3Value(int pos) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("type3_value", pos);
+        editor.commit();
     }
 }

@@ -36,7 +36,7 @@ public class VariantItem implements Serializable {
         }
     }
 
-    String getVariantName() {
+    public String getVariantName() {
         return variant_name;
     }
 
