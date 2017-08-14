@@ -271,7 +271,6 @@ public class ThemeManager {
                                         ArrayList<String> overlays) {
         ArrayList<String> temp = new ArrayList<>(overlays);
         temp.removeAll(listOverlays(context, STATE_APPROVED_DISABLED));
-        boolean shouldRestartUi = shouldRestartUI(context, temp);
         disableOverlay(context, temp);
 
         // if enabled list is not contains any overlays
@@ -279,7 +278,7 @@ public class ThemeManager {
             ThemeInterfacerService.uninstallOverlays(
                     context,
                     overlays,
-                    shouldRestartUi);
+                    false);
         }
     }
 
