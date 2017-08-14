@@ -1070,10 +1070,6 @@ class OverlayFunctions {
                     Toast.makeText(context,
                             R.string.toast_compiled_missing,
                             Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(context,
-                            R.string.toast_compiled_updated,
-                            Toast.LENGTH_LONG).show();
                 }
             }
         }

@@ -53,7 +53,6 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.omnirom.substratum.R;
 
@@ -284,6 +283,8 @@ public class OmniActivity extends SubstratumActivity {
         if (!fragment.init(theme_name, theme_pid, encryption_key, iv_encrypt_key)) {
             finish();
         }
+
+        checkIfOverlaysAreFromOmni();
     }
 
     @Override
@@ -388,14 +389,7 @@ public class OmniActivity extends SubstratumActivity {
                         .setPositiveButton(R.string.dialog_ok, (dialog, id110) -> {
                             // Dismiss the dialog
                             dialog.dismiss();
-                            FileOperations.delete(
-                                    getApplicationContext(), getBuildDirPath() + theme_pid + "/");
-                            String format =
-                                    String.format(
-                                            getString(R.string.cache_clear_completion),
-                                            theme_name);
-                            createToast(format, Toast.LENGTH_LONG);
-                            finish();
+                            new cleanInstalledTheme().execute(theme_pid);
                         })
                         .setNegativeButton(R.string.dialog_cancel, (dialog, id17) ->
                                 dialog.cancel());
@@ -435,10 +429,9 @@ public class OmniActivity extends SubstratumActivity {
                                     // NameNotFound
                                 }
                             }
-                            createToast(getString(R.string.disable_completion), Toast.LENGTH_LONG);
 
                             // Begin disabling overlays
-                            ThemeManager.disableOverlay(getApplicationContext(), all_overlays);
+                            new disableInstalledTheme().execute(all_overlays);
                         })
                         .setNegativeButton(R.string.dialog_cancel, (dialog, id15) -> {
                             // User cancelled the dialog
@@ -479,10 +472,9 @@ public class OmniActivity extends SubstratumActivity {
                                     // NameNotFound
                                 }
                             }
-                            createToast(getString(R.string.enable_completion), Toast.LENGTH_LONG);
 
                             // Begin enabling overlays
-                            ThemeManager.enableOverlay(getApplicationContext(), all_overlays);
+                            new enableInstalledTheme().execute(all_overlays);
                         })
                         .setNegativeButton(R.string.dialog_cancel, (dialog, id13) ->
                                 dialog
@@ -601,6 +593,82 @@ public class OmniActivity extends SubstratumActivity {
         }
     }
 
+    private class enableInstalledTheme extends AsyncTask<ArrayList<String>, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(OmniActivity.this);
+            mProgressDialog.setMessage(getResources().getString(R.string.overlay_enable_progress));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            try {
+                mProgressDialog.cancel();
+            } catch (Exception e) {
+            }
+        }
+
+        @Override
+        protected Void doInBackground(ArrayList<String>... overlays) {
+            ThemeManager.enableOverlay(getApplicationContext(), overlays[0]);
+            return null;
+        }
+    }
+
+    private class disableInstalledTheme extends AsyncTask<ArrayList<String>, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(OmniActivity.this);
+            mProgressDialog.setMessage(getResources().getString(R.string.overlay_disable_progress));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            try {
+                mProgressDialog.cancel();
+            } catch (Exception e) {
+            }
+        }
+
+        @Override
+        protected Void doInBackground(ArrayList<String>... overlays) {
+            ThemeManager.disableOverlay(getApplicationContext(), overlays[0]);
+            return null;
+        }
+    }
+
+    private class cleanInstalledTheme extends AsyncTask<String, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(OmniActivity.this);
+            mProgressDialog.setMessage(getResources().getString(R.string.overlay_clean_progress));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            try {
+                mProgressDialog.cancel();
+            } catch (Exception e) {
+            }
+        }
+
+        @Override
+        protected Void doInBackground(String... theme_pid) {
+            FileOperations.delete(
+                    getApplicationContext(), getBuildDirPath() + theme_pid + "/");
+            return null;
+        }
+    }
+
     class RefreshReceiver extends BroadcastReceiver {
 
         @Override
@@ -662,8 +730,11 @@ public class OmniActivity extends SubstratumActivity {
                     overlays.get(i));
             if (current_version == 0) {
                 Log.d("OverlayOmniCheck",
-                        "Overlay is not built with OmniSubs");
+                        "Overlay is not built with OmniSubs " + overlays.get(i));
                 return true;
+            } else {
+                Log.d("OverlayOmniCheck",
+                        "Overlay is built with OmniSubs " + overlays.get(i));
             }
         }
         return false;

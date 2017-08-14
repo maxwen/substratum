@@ -104,6 +104,7 @@ import projekt.substratum.util.compilers.SubstratumBuilder;
 import projekt.substratum.util.files.MapUtils;
 
 import static android.content.Context.CLIPBOARD_SERVICE;
+import static android.content.om.OverlayInfo.STATE_APPROVED_DISABLED;
 import static android.content.om.OverlayInfo.STATE_APPROVED_ENABLED;
 import static projekt.substratum.common.References.ENABLE_PACKAGE_LOGGING;
 import static projekt.substratum.common.References.EXTERNAL_STORAGE_CACHE;
@@ -114,6 +115,7 @@ import static projekt.substratum.common.References.SUBSTRATUM_BUILDER_CACHE;
 import static projekt.substratum.common.References.metadataEmail;
 import static projekt.substratum.common.References.metadataEncryption;
 import static projekt.substratum.common.References.metadataEncryptionValue;
+import static projekt.substratum.common.References.metadataOverlayParent;
 
 public class Overlays extends Fragment {
 
@@ -149,7 +151,6 @@ public class Overlays extends Fragment {
     public double current_amount = 0;
     public double total_amount = 0;
     public String current_dialog_overlay;
-    public ProgressBar dialogProgress;
     public FinishReceiver finishReceiver;
     public ArrayList<String> final_command;
     public boolean isWaiting;
@@ -255,6 +256,31 @@ public class Overlays extends Fragment {
                 Toast.makeText(getContext(),
                         R.string.toast_disabled5,
                         Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    public void startDisableNew() {
+        overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
+        ArrayList<String> checkedOverlays = new ArrayList<>();
+        List<String> stateAll = ThemeManager.listOverlays(getContext(), STATE_APPROVED_ENABLED);
+
+        if (References.checkOMS(getContext())) {
+            for (int i = 0; i < overlaysLists.size(); i++) {
+                OverlaysItem currentOverlay = overlaysLists.get(i);
+                if (currentOverlay.isSelected() && currentOverlay.isOverlayEnabled()) {
+                    for (int j = 0; j < stateAll.size(); j++) {
+                        String current = stateAll.get(j);
+                        if (current.startsWith(currentOverlay.getPackageName())) {
+                            checkedOverlays.add(current);
+                        }
+                    }
+                }
+            }
+
+            if (checkedOverlays.size() != 0) {
+                // Begin disabling overlays
+                new disableTheme().execute(checkedOverlays);
             }
         }
     }
@@ -369,6 +395,31 @@ public class Overlays extends Fragment {
         }
     }
 
+    public void startEnableNew() {
+        overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
+        ArrayList<String> checkedOverlays = new ArrayList<>();
+        List<String> stateAll = ThemeManager.listOverlays(getContext(), STATE_APPROVED_DISABLED);
+
+        if (References.checkOMS(getContext())) {
+            for (int i = 0; i < overlaysLists.size(); i++) {
+                OverlaysItem currentOverlay = overlaysLists.get(i);
+                if (currentOverlay.isSelected() && !currentOverlay.isOverlayEnabled()) {
+                    for (int j = 0; j < stateAll.size(); j++) {
+                        String current = stateAll.get(j);
+                        if (current.startsWith(currentOverlay.getPackageName())) {
+                            checkedOverlays.add(current);
+                        }
+                    }
+                }
+            }
+
+            if (checkedOverlays.size() != 0) {
+                // Begin enabling overlays\
+                new enableTheme().execute(checkedOverlays);
+            }
+        }
+    }
+
     public void startEnable() {
         if (!is_active) {
             is_active = true;
@@ -464,7 +515,7 @@ public class Overlays extends Fragment {
         }
 
         if (decryptedAssetsExceptionReached) {
-           return false;
+            return false;
         }
 
         mixAndMatchMode = prefs.getBoolean("enable_swapping_overlays", false);
@@ -1571,10 +1622,10 @@ public class Overlays extends Fragment {
                     if (mAdapter != null) startCompileUpdateMode();
                     break;
                 case "Disable":
-                    if (mAdapter != null) startDisable();
+                    if (mAdapter != null) startDisableNew();
                     break;
                 case "Enable":
-                    if (mAdapter != null) startEnable();
+                    if (mAdapter != null) startEnableNew();
                     break;
             }
         }
@@ -1590,7 +1641,7 @@ public class Overlays extends Fragment {
 
     public void setType1Value(String packageName, String key, String value) {
         if (!TextUtils.isEmpty(value)) {
-            String type1PrefKey= key + ":" + packageName;
+            String type1PrefKey = key + ":" + packageName;
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString(type1PrefKey, value);
             editor.commit();
@@ -1599,7 +1650,7 @@ public class Overlays extends Fragment {
 
     public void setType2Value(String packageName, String key, String value) {
         if (!TextUtils.isEmpty(value)) {
-            String type2PrefKey= key + ":" + packageName;
+            String type2PrefKey = key + ":" + packageName;
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString(type2PrefKey, value);
             editor.commit();
@@ -1610,5 +1661,67 @@ public class Overlays extends Fragment {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putInt("type3_value", pos);
         editor.commit();
+    }
+
+    private void reloadList() {
+        overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
+        for (int i = 0; i < overlaysLists.size(); i++) {
+            OverlaysItem currentOverlay = overlaysLists.get(i);
+            currentOverlay.updateEnabledOverlays(updateEnabledOverlays());
+            currentOverlay.setSelected(false);
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private class enableTheme extends AsyncTask<ArrayList<String>, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(getContext());
+            mProgressDialog.setMessage(getResources().getString(R.string.overlay_enable_progress));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            try {
+                reloadList();
+                mProgressDialog.cancel();
+            } catch (Exception e) {
+            }
+        }
+
+        @Override
+        protected Void doInBackground(ArrayList<String>... overlays) {
+            ThemeManager.enableOverlay(getContext(), overlays[0]);
+            return null;
+        }
+    }
+
+    private class disableTheme extends AsyncTask<ArrayList<String>, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(getContext());
+            mProgressDialog.setMessage(getResources().getString(R.string.overlay_disable_progress));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            try {
+                reloadList();
+                mProgressDialog.cancel();
+            } catch (Exception e) {
+            }
+        }
+
+        @Override
+        protected Void doInBackground(ArrayList<String>... overlays) {
+            ThemeManager.disableOverlay(getContext(), overlays[0]);
+            return null;
+        }
     }
 }

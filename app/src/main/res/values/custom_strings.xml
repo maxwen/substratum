@@ -4,4 +4,7 @@
     <string name="menu_auto_restart_systemui">Auto restart SystemUI</string>
     <string name="restart_systemui_warning_title">Restart SystemUI</string>
     <string name="restart_auto_systemui_warning">This will automatically restart SystemUI which can cause problems! In such cases its better to reboot the device after applying a theme. You can disable automatic reboot in menu. Continue with restart SystemUI?</string>
+    <string name="overlay_enable_progress">Enabling overlays&#8230;</string>
+    <string name="overlay_disable_progress">Disabling overlays&#8230;</string>
+    <string name="overlay_clean_progress">Cleaning overlays&#8230;</string>
 </resources>
