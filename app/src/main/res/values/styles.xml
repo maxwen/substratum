@@ -27,7 +27,7 @@
         <item name="android:itemBackground">@color/colorPrimary</item>
     </style>
 
-    <style name="ActionBarPopupTheme" parent="Theme.AppCompat" />
+    <style name="ActionBarPopupTheme" parent="@android:style/ThemeOverlay.Material.Dark.ActionBar" />
 
     <style name="AppTheme.DialogAlert" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="colorPrimary">@color/colorPrimary</item>
