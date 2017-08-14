@@ -73,13 +73,6 @@
             android:src="@drawable/logcat_dialog_copy"
             android:text="@string/dialog_ok"/>
 
-        <ImageButton
-            android:id="@+id/send"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:src="@drawable/logcat_dialog_send"
-            android:text="@string/dialog_ok"/>
     </LinearLayout>
 
 </RelativeLayout>

@@ -118,7 +118,7 @@ public class OverlaysItem implements Serializable {
         return package_name;
     }
 
-    String getBaseResources() {
+    public String getBaseResources() {
         return baseResources;
     }
 

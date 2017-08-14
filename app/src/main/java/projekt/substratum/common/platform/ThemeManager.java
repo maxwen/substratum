@@ -23,7 +23,6 @@ import android.content.SharedPreferences;
 import android.content.om.OverlayInfo;
 import android.preference.PreferenceManager;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,16 +30,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import projekt.substratum.Substratum;
 import projekt.substratum.common.References;
 import projekt.substratum.common.Resources;
-import projekt.substratum.common.commands.ElevatedCommands;
-import projekt.substratum.util.files.Root;
 
 import static android.content.om.OverlayInfo.STATE_APPROVED_DISABLED;
 import static android.content.om.OverlayInfo.STATE_APPROVED_ENABLED;
 import static android.content.om.OverlayInfo.STATE_NOT_APPROVED_DANGEROUS_OVERLAY;
 import static projekt.substratum.common.References.INTERFACER_PACKAGE;
-import static projekt.substratum.common.References.LEGACY_NEXUS_DIR;
 import static projekt.substratum.common.References.checkOMS;
 import static projekt.substratum.common.References.checkThemeInterfacer;
 
@@ -54,16 +51,9 @@ public class ThemeManager {
      * <p>
      * NOTE: Deprecation at the OMS3 level. We no longer support OMS3 commands.
      */
-    public static final String disableOverlay = "cmd overlay disable";
-    public static final String enableOverlay = "cmd overlay enable";
-    private static final String listAllOverlays = "cmd overlay list";
-    private static final String disableAllOverlays = "cmd overlay disable-all";
-    private static final String setPriority = "cmd overlay set-priority";
     private static final String[] blacklistedPackages = new String[]{
             INTERFACER_PACKAGE,
     };
-    // Non-Interfacer (NI) values
-    private static final Integer NI_restartSystemUIDelay = 2000;
 
     public static boolean blacklisted(String packageName, Boolean unsupportedSamsung) {
         List<String> blacklisted = new ArrayList<>(Arrays.asList(blacklistedPackages));
@@ -87,18 +77,6 @@ public class ThemeManager {
         if (checkThemeInterfacer(context)) {
             ThemeInterfacerService.enableOverlays(context, overlays, shouldRestartUI(context,
                     overlays));
-        } else {
-            StringBuilder commands = new StringBuilder(enableOverlay + " " + overlays.get(0));
-            for (int i = 1; i < overlays.size(); i++) {
-                commands.append(";" + enableOverlay + " ").append(overlays.get(i));
-            }
-            new ElevatedCommands.ThreadRunner().execute(commands.toString());
-            try {
-                Thread.sleep(NI_restartSystemUIDelay);
-                if (shouldRestartUI(context, overlays)) restartSystemUI(context);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -110,18 +88,16 @@ public class ThemeManager {
         if (checkThemeInterfacer(context)) {
             ThemeInterfacerService.disableOverlays(context, overlays, shouldRestartUI(context,
                     overlays));
-        } else {
-            StringBuilder commands = new StringBuilder(disableOverlay + " " + overlays.get(0));
-            for (int i = 1; i < overlays.size(); i++) {
-                commands.append(";" + disableOverlay + " ").append(overlays.get(i));
-            }
-            new ElevatedCommands.ThreadRunner().execute(commands.toString());
-            try {
-                Thread.sleep(NI_restartSystemUIDelay);
-                if (shouldRestartUI(context, overlays)) restartSystemUI(context);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        }
+    }
+
+    public static void disableOverlaySilent(Context context, ArrayList<String> overlays) {
+        if (overlays.isEmpty()) return;
+        overlays.removeAll(listOverlays(context, STATE_APPROVED_DISABLED));
+        if (overlays.isEmpty()) return;
+
+        if (checkThemeInterfacer(context)) {
+            ThemeInterfacerService.disableOverlays(context, overlays, false);
         }
     }
 
@@ -129,16 +105,6 @@ public class ThemeManager {
         if (checkThemeInterfacer(context)) {
             ThemeInterfacerService.setPriority(
                     context, overlays, shouldRestartUI(context, overlays));
-        } else {
-            StringBuilder commands = new StringBuilder();
-            for (int i = 0; i < overlays.size() - 1; i++) {
-                String packageName = overlays.get(i);
-                String parentName = overlays.get(i + 1);
-                commands.append((commands.length() == 0) ? "" : " && ").append(setPriority)
-                        .append(" ").append(packageName).append(" ").append(parentName);
-            }
-            new ElevatedCommands.ThreadRunner().execute(commands.toString());
-            if (shouldRestartUI(context, overlays)) restartSystemUI(context);
         }
     }
 
@@ -152,8 +118,6 @@ public class ThemeManager {
     public static void restartSystemUI(Context context) {
         if (checkThemeInterfacer(context)) {
             ThemeInterfacerService.restartSystemUI(context);
-        } else {
-            Root.runCommand("pkill -f com.android.systemui");
         }
     }
 
@@ -180,40 +144,6 @@ public class ThemeManager {
             }
         } catch (Exception | NoSuchMethodError e) {
             // At this point, we probably ran into a legacy command or stock OMS
-            if (References.checkOMS(context)) {
-                String enabledPrefix = "[x]";
-                String disabledPrefix = "[ ]";
-                String[] arrList = Root.runCommand(listAllOverlays)
-                        .split(System.getProperty("line.separator"));
-
-                for (String line : arrList) {
-                    if (line.startsWith(enabledPrefix) || line.startsWith(disabledPrefix)) {
-                        String packageName = line.substring(4);
-                        if (References.isPackageInstalled(context, packageName)) {
-                            try {
-                                String sourceDir = context.getPackageManager()
-                                        .getApplicationInfo(packageName, 0).sourceDir;
-                                if (!sourceDir.startsWith("/vendor/overlay/")) {
-                                    list.add(packageName);
-                                }
-                            } catch (Exception ee) {
-                                // Package not found blabla
-                            }
-                        }
-                    }
-                }
-            } else {
-                    File legacyCheck = new File(LEGACY_NEXUS_DIR);
-                    if (legacyCheck.exists() && legacyCheck.isDirectory()) {
-                        list.clear();
-                        String[] lister = legacyCheck.list();
-                        for (String aLister : lister) {
-                            if (aLister.endsWith(".apk")) {
-                                list.add(aLister.substring(0, aLister.length() - 4));
-                            }
-                        }
-                    }
-            }
         }
         return list;
     }
@@ -240,57 +170,6 @@ public class ThemeManager {
             }
         } catch (Exception | NoSuchMethodError e) {
             // At this point, we probably ran into a legacy command or stock OMS
-            if (References.checkOMS(context)) {
-                String prefix;
-                switch (state) {
-                    case STATE_APPROVED_ENABLED:
-                        prefix = "[x]";
-                        break;
-                    case STATE_APPROVED_DISABLED:
-                        prefix = "[ ]";
-                        break;
-                    default:
-                        prefix = "---";
-                        break;
-                }
-
-                String[] arrList = Root.runCommand(listAllOverlays)
-                        .split(System.getProperty("line.separator"));
-                for (String line : arrList) {
-                    if (line.startsWith(prefix)) {
-                        String packageName = line.substring(4);
-                        if (References.isPackageInstalled(context, packageName)) {
-                            try {
-                                String sourceDir = context.getPackageManager()
-                                        .getApplicationInfo(packageName, 0).sourceDir;
-                                if (!sourceDir.startsWith("/vendor/overlay/")) {
-                                    list.add(packageName);
-                                }
-                            } catch (Exception ee) {
-                                // Package not found blabla
-                            }
-                        }
-                    }
-                }
-            } else {
-                switch (state) {
-                    case STATE_APPROVED_ENABLED:
-                            File legacyCheck = new File(LEGACY_NEXUS_DIR);
-                            if (legacyCheck.exists() && legacyCheck.isDirectory()) {
-                                list.clear();
-                                String[] lister = legacyCheck.list();
-                                for (String aLister : lister) {
-                                    if (aLister.endsWith(".apk")) {
-                                        list.add(aLister.substring(0, aLister.length() - 4));
-                                    }
-                                }
-                            }
-                        break;
-                    default:
-                        list.clear();
-                        break;
-                }
-            }
         }
         return list;
     }
@@ -318,25 +197,6 @@ public class ThemeManager {
                 }
             }
         } catch (Exception | NoSuchMethodError e) {
-            // Stock OMS goes here
-            String prefix = "[x]";
-            String[] arrList = Root.runCommand(listAllOverlays)
-                    .split(System.getProperty("line.separator"));
-            int counter = 0;
-            String currentApp = "";
-            for (String line : arrList) {
-                if (line.startsWith(prefix)) {
-                    if (References.isPackageInstalled(context, line.substring(4))) {
-                        counter++;
-                    }
-                } else if (!line.startsWith("---")) {
-                    if (counter > 1) {
-                        list.add(currentApp);
-                    }
-                    counter = 0;
-                    currentApp = line;
-                }
-            }
         }
         return list;
     }
@@ -398,20 +258,12 @@ public class ThemeManager {
             ArrayList<String> list = new ArrayList<>();
             list.add(overlay);
             ThemeInterfacerService.installOverlays(context, list);
-        } else {
-            new ElevatedCommands.ThreadRunner().execute("pm install -r " + overlay);
         }
     }
 
     public static void installOverlay(Context context, ArrayList<String> overlays) {
         if (checkThemeInterfacer(context)) {
             ThemeInterfacerService.installOverlays(context, overlays);
-        } else {
-            StringBuilder packages = new StringBuilder();
-            for (String o : overlays) {
-                packages.append(o).append(" ");
-            }
-            new ElevatedCommands.ThreadRunner().execute("pm install -r " + packages);
         }
     }
 
@@ -428,15 +280,6 @@ public class ThemeManager {
                     context,
                     overlays,
                     shouldRestartUi);
-        } else {
-            StringBuilder command = new StringBuilder();
-            for (String packageName : overlays) {
-                command.append((command.length() == 0) ? "" : " && ").append("pm uninstall ")
-                        .append(packageName);
-            }
-            new ElevatedCommands.ThreadRunner().execute(command.toString());
-            if (checkOMS(context) && shouldRestartUi)
-                restartSystemUI(context);
         }
     }
 
@@ -444,7 +287,7 @@ public class ThemeManager {
         if (checkOMS(context)) {
             for (String o : overlays) {
                 if (o.startsWith("com.android.systemui")) {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Substratum.getInstance().getApplicationContext());
                     return prefs.getBoolean("enable_restart_systemui", true);
                 }
             }

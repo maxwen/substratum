@@ -67,8 +67,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -77,10 +75,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -91,13 +87,11 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
 import projekt.substratum.activities.launch.ThemeLaunchActivity;
-import projekt.substratum.common.commands.ElevatedCommands;
 import projekt.substratum.common.platform.ThemeInterfacerService;
 import projekt.substratum.services.system.InterfacerAuthorizationReceiver;
 import projekt.substratum.util.compilers.CacheCreator;
 import projekt.substratum.util.files.IOUtils;
 import projekt.substratum.util.injectors.AOPTCheck;
-import projekt.substratum.util.readers.ReadSupportedROMsFile;
 import projekt.substratum.util.readers.ReadVariantPrioritizedColor;
 
 public class References {
@@ -226,116 +220,6 @@ public class References {
     private static Boolean uncertified = null;
     private static int hashValue;
 
-    public static String checkFirmwareSupport(Context context, String urls, String inputFileName) {
-        String supported_rom = "";
-        try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(urls).openConnection();
-            connection.connect();
-
-            if (References.isNetworkAvailable(context)) {
-                try (InputStream input = connection.getInputStream();
-                     OutputStream output = new FileOutputStream(
-                             context.getCacheDir().getAbsolutePath() + "/" + inputFileName)) {
-
-                    // expect HTTP 200 OK, so we don't mistakenly save error report
-                    // instead of the file
-                    if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        return "Server returned HTTP " + connection.getResponseCode()
-                                + " " + connection.getResponseMessage();
-                    }
-
-                    byte data[] = new byte[4096];
-                    int count;
-                    while ((count = input.read(data)) != -1) {
-                        // allow canceling with back button
-                        output.write(data, 0, count);
-                    }
-                }
-            } else {
-                File check = new File(context.getCacheDir().getAbsolutePath() +
-                        "/" + inputFileName);
-                if (!check.exists()) {
-                    return "";
-                }
-            }
-
-            HashMap<String, String> listOfRoms =
-                    ReadSupportedROMsFile.main(context.getCacheDir() + "/" + inputFileName);
-            Boolean supported = false;
-
-            // First check if it is a valid prop
-            for (Object o : listOfRoms.entrySet()) {
-                Map.Entry pair = (Map.Entry) o;
-                String key = (String) pair.getKey();
-                String value = (String) pair.getValue();
-                Process process = Runtime.getRuntime().exec("getprop " + key);
-                process.waitFor();
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream()))) {
-                    String line = reader.readLine();
-                    if (line != null && line.length() > 0) {
-                        if (value == null || value.length() == 0) {
-                            String current = key;
-                            if (current.contains(".")) {
-                                current = current.split("\\.")[1];
-                            }
-                            Log.d(References.SUBSTRATUM_LOG, "Supported ROM: " + current);
-                            supported_rom = current;
-                            supported = true;
-                        } else {
-                            Log.d(References.SUBSTRATUM_LOG, "Supported ROM: " + value);
-                            supported_rom = value;
-                            supported = true;
-                        }
-                        break;
-                    }
-                }
-            }
-
-            // Then check ro.product.flavor
-            if (!supported) {
-                Iterator it = listOfRoms.entrySet().iterator();
-                Process process = Runtime.getRuntime().exec("getprop ro.build.flavor");
-                process.waitFor();
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        while (it.hasNext()) {
-                            Map.Entry pair = (Map.Entry) it.next();
-
-                            String key = (String) pair.getKey();
-                            String value = (String) pair.getValue();
-
-                            if (line.toLowerCase().contains(key.toLowerCase())) {
-                                if (value == null || value.length() == 0) {
-                                    String current = key;
-                                    if (current.contains(".")) {
-                                        current = current.split("\\.")[1];
-                                    }
-                                    Log.d(References.SUBSTRATUM_LOG,
-                                            "Supported ROM (1): " + current);
-                                    supported_rom = current;
-                                    supported = true;
-                                } else {
-                                    Log.d(References.SUBSTRATUM_LOG,
-                                            "Supported ROM (1): " + value);
-                                    supported_rom = value;
-                                    supported = true;
-                                }
-                                break;
-                            }
-                        }
-                        if (supported) break;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Suppress warning
-        }
-        return supported_rom;
-    }
-
     public static void registerBroadcastReceivers(Context context) {
         try {
             IntentFilter interfacerAuthorize = new IntentFilter(
@@ -354,8 +238,6 @@ public class References {
 
     public static boolean isCachingEnabled(Context context) {
         return false;
-        //return PreferenceManager.getDefaultSharedPreferences(context)
-        //        .getBoolean("caching_enabled", false);
     }
 
 
@@ -752,13 +634,7 @@ public class References {
         } catch (Exception e) {
             // Suppress warning
         }
-        if (package_name != null &&
-                package_name.equals(INTERFACER_PACKAGE) &&
-                !checkOMS(context)) {
-            return context.getDrawable(R.mipmap.main_launcher);
-        } else {
-            return context.getDrawable(R.drawable.default_overlay_icon);
-        }
+        return context.getDrawable(R.drawable.default_overlay_icon);
     }
 
     // This method obtains the overlay parent icon for specified package, returns self package icon
@@ -1587,8 +1463,6 @@ public class References {
             ArrayList<String> list = new ArrayList<>();
             list.add(packageName);
             ThemeInterfacerService.uninstallOverlays(context, list, false);
-        } else {
-            new ElevatedCommands.ThreadRunner().execute("pm uninstall " + packageName);
         }
     }
 

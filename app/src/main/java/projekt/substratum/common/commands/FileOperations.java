@@ -39,7 +39,6 @@ import javax.crypto.CipherInputStream;
 
 import projekt.substratum.common.platform.ThemeInterfacerService;
 import projekt.substratum.util.files.FileUtils;
-import projekt.substratum.util.files.Root;
 
 import static projekt.substratum.common.References.ENABLE_DIRECT_ASSETS_LOGGING;
 import static projekt.substratum.common.References.checkThemeInterfacer;
@@ -53,37 +52,6 @@ public class FileOperations {
     private static final String MOVE_LOG = "SubstratumMove";
     private static final String DA_LOG = "DirectAssets";
     private static final String ENCRYPTION_EXTENSION = ".enc";
-
-    public static void adjustContentProvider(final String uri,
-                                             final String topic, final String fileName) {
-        Root.runCommand("content insert --uri " + uri + " " +
-                "--bind name:s:" + topic + " --bind value:s:" + fileName);
-    }
-
-    public static void grantPermission(final String packager, final String permission) {
-        Root.runCommand("pm grant " + packager + " " + permission);
-    }
-
-    public static void setContext(final String foldername) {
-        Root.runCommand("chcon -R u:object_r:system_file:s0 " + foldername);
-    }
-
-    public static void setPermissions(final int permission, final String foldername) {
-        Root.runCommand("chmod " + permission + " " + foldername);
-    }
-
-    public static void setPermissionsRecursively(final int permission, final String foldername) {
-        Root.runCommand("chmod -R " + permission + " " + foldername);
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    public static void setProp(final String propName, final String propValue) {
-        Root.runCommand("setprop " + propName + " " + propValue);
-    }
-
-    public static void symlink(final String source, final String destination) {
-        Root.runCommand("ln -s " + source + " " + destination);
-    }
 
     private static String checkBox(String mountType) {
         Process process = null;
@@ -109,29 +77,6 @@ public class FileOperations {
         return result;
     }
 
-    public static void mountRW() {
-        Root.runCommand("mount -o " + checkBox("rw") + " /system");
-    }
-
-    public static void mountRWData() {
-        Root.runCommand("mount -o " + checkBox("rw") + " /data");
-    }
-
-    public static void mountRWVendor() {
-        Root.runCommand("mount -o " + checkBox("rw") + " /vendor");
-    }
-
-    public static void mountRO() {
-        Root.runCommand("mount -o " + checkBox("ro") + " /system");
-    }
-
-    public static void mountROData() {
-        Root.runCommand("mount -o " + checkBox("ro") + " /data");
-    }
-
-    public static void mountROVendor() {
-        Root.runCommand("mount -o " + checkBox("ro") + " /vendor");
-    }
 
     public static void createNewFolder(Context context, String destination) {
         String dataDir = context.getDataDir().getAbsolutePath();
@@ -152,10 +97,6 @@ public class FileOperations {
         File folder = new File(foldername);
         if (!folder.exists()) {
             Log.d(CREATE_LOG, "Operation " + (folder.mkdirs() ? "succeeded" : "failed"));
-            if (!folder.exists()) {
-                Log.d(CREATE_LOG, "Using rooted operation to create " + foldername);
-                Root.runCommand("mkdir " + foldername);
-            }
         } else {
             Log.d("SubstratumCreate", "Folder already exists!");
         }
@@ -200,11 +141,6 @@ public class FileOperations {
         } catch (IOException e) {
             // Suppress warning
         }
-        if (!out.exists()) {
-            Log.d(COPY_LOG,
-                    "Rootless operation failed, falling back to rooted mode...");
-            Root.runCommand("cp -f " + source + " " + destination);
-        }
         Log.d(COPY_LOG, "Operation " + (out.exists() ? "succeeded" : "failed"));
     }
 
@@ -231,16 +167,7 @@ public class FileOperations {
         } catch (IOException e) {
             // Suppress warning
         }
-        if (!out.exists()) {
-            Log.d(COPY_LOG,
-                    "Rootless operation failed, falling back to rooted mode...");
-            Root.runCommand("cp -rf " + source + " " + destination);
-        }
         Log.d(COPYDIR_LOG, "Operation " + (out.exists() ? "succeeded" : "failed"));
-    }
-
-    public static void bruteforceDelete(String directory) {
-        Root.runCommand("rm -rf " + directory);
     }
 
     public static void delete(Context context, String directory) {
@@ -290,23 +217,6 @@ public class FileOperations {
         } catch (IOException e) {
             // Suppress warning
         }
-        if (dir.exists()) {
-            Log.d(DELETE_LOG,
-                    "Rootless operation failed, falling back to rooted mode...");
-            if (deleteParent) {
-                Root.runCommand("rm -rf " + directory);
-            } else {
-                StringBuilder command = new StringBuilder("rm -rf ");
-                if (dir.isDirectory()) {
-                    for (File child : dir.listFiles()) {
-                        command.append(child.getAbsolutePath()).append(" ");
-                    }
-                    Root.runCommand(command.toString());
-                } else {
-                    Root.runCommand(command + directory);
-                }
-            }
-        }
         Log.d(DELETE_LOG, "Operation " + (!dir.exists() ? "succeeded" : "failed"));
     }
 
@@ -351,9 +261,6 @@ public class FileOperations {
                 FileUtils.moveDirectory(in, out);
             }
         } catch (Exception e) {
-            Log.d(MOVE_LOG,
-                    "Rootless operation failed, falling back to rooted mode...");
-            Root.runCommand("mv -f " + source + " " + destination);
         }
         Log.d(MOVE_LOG, "Operation " + (out.exists() ? "succeeded" : "failed"));
     }

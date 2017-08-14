@@ -34,9 +34,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -47,12 +45,9 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import projekt.substratum.OmniActivity;
-import projekt.substratum.Substratum;
 import projekt.substratum.adapters.tabs.overlays.OverlaysAdapter;
 import projekt.substratum.adapters.tabs.overlays.OverlaysItem;
-import projekt.substratum.adapters.tabs.overlays.VariantItem;
 import projekt.substratum.common.References;
-import projekt.substratum.common.commands.ElevatedCommands;
 import projekt.substratum.common.commands.FileOperations;
 import projekt.substratum.common.platform.ThemeManager;
 import projekt.substratum.util.compilers.CacheCreator;
@@ -282,26 +277,7 @@ class OverlayFunctions {
             } else if (fragment.disable_mode) {
                 new Phase4_finishDisableFunction(fragment, context, refActivity.get()).execute();
             }
-            if (!References.checkOMS(context) &&
-                    fragment.final_runner.size() == fragment.fail_count) {
-                final AlertDialog.Builder alertDialogBuilder =
-                        new AlertDialog.Builder(context);
-                alertDialogBuilder
-                        .setTitle(context.getString(R.string.legacy_dialog_soft_reboot_title));
-                alertDialogBuilder
-                        .setMessage(context.getString(R.string.legacy_dialog_soft_reboot_text));
-                alertDialogBuilder
-                        .setPositiveButton(android.R.string.ok,
-                                (dialog, id12) -> ElevatedCommands.reboot());
-                alertDialogBuilder
-                        .setNegativeButton(R.string.remove_dialog_later,
-                                (dialog, id1) -> {
-                                    dialog.dismiss();
-                                });
-                alertDialogBuilder.setCancelable(false);
-                AlertDialog alertDialog = alertDialogBuilder.create();
-                alertDialog.show();
-            }
+
             fragment.is_active = false;
             fragment.mAdapter.notifyDataSetChanged();
             if (fragment.toggle_all.isChecked()) fragment.toggle_all.setChecked(false);
@@ -318,20 +294,6 @@ class OverlayFunctions {
             String parsedVariant = sUrl[0].replaceAll("\\s+", "");
             String unparsedVariant = sUrl[0];
             fragment.failed_packages = new StringBuilder();
-
-            if (fragment.mixAndMatchMode && !References.checkOMS(context)) {
-                String current_directory;
-                if (References.inNexusFilter()) {
-                    current_directory = References.PIXEL_NEXUS_DIR;
-                } else {
-                    current_directory = References.LEGACY_NEXUS_DIR;
-                }
-                File file = new File(current_directory);
-                if (file.exists()) {
-                    FileOperations.mountRW();
-                    FileOperations.delete(context, current_directory);
-                }
-            }
 
             // Enable listener
             if (References.checkThemeInterfacer(context) &&
@@ -1106,13 +1068,6 @@ class OverlayFunctions {
                     }
                     if (checkThemeInterfacer(context)) {
                         ThemeManager.disableOverlay(context, disableBeforeEnabling);
-                    } else {
-                        final_commands = new StringBuilder(ThemeManager.disableOverlay);
-                        for (int i = 0; i < disableBeforeEnabling.size(); i++) {
-                            final_commands.append(" ").append(disableBeforeEnabling.get(i))
-                                    .append(" ");
-                        }
-                        Log.d(TAG, final_commands.toString());
                     }
                 }
 

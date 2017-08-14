@@ -90,14 +90,12 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import projekt.substratum.OmniActivity;
 import projekt.substratum.Substratum;
 import projekt.substratum.adapters.tabs.overlays.OverlaysAdapter;
 import projekt.substratum.adapters.tabs.overlays.OverlaysItem;
 import projekt.substratum.adapters.tabs.overlays.VariantAdapter;
 import projekt.substratum.adapters.tabs.overlays.VariantItem;
 import projekt.substratum.common.References;
-import projekt.substratum.common.commands.ElevatedCommands;
 import projekt.substratum.common.commands.FileOperations;
 import projekt.substratum.common.platform.ThemeManager;
 import projekt.substratum.util.compilers.SubstratumBuilder;
@@ -108,14 +106,11 @@ import static android.content.om.OverlayInfo.STATE_APPROVED_DISABLED;
 import static android.content.om.OverlayInfo.STATE_APPROVED_ENABLED;
 import static projekt.substratum.common.References.ENABLE_PACKAGE_LOGGING;
 import static projekt.substratum.common.References.EXTERNAL_STORAGE_CACHE;
-import static projekt.substratum.common.References.LEGACY_NEXUS_DIR;
-import static projekt.substratum.common.References.PIXEL_NEXUS_DIR;
 import static projekt.substratum.common.References.SUBSTRATUM_BUILDER;
 import static projekt.substratum.common.References.SUBSTRATUM_BUILDER_CACHE;
 import static projekt.substratum.common.References.metadataEmail;
 import static projekt.substratum.common.References.metadataEncryption;
 import static projekt.substratum.common.References.metadataEncryptionValue;
-import static projekt.substratum.common.References.metadataOverlayParent;
 
 public class Overlays extends Fragment {
 
@@ -260,18 +255,18 @@ public class Overlays extends Fragment {
         }
     }
 
-    public void startDisableNew() {
+    public void startDisableNew(boolean silent) {
         overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
         ArrayList<String> checkedOverlays = new ArrayList<>();
-        List<String> stateAll = ThemeManager.listOverlays(getContext(), STATE_APPROVED_ENABLED);
+        List<String> stateEnabled = ThemeManager.listOverlays(getContext(), STATE_APPROVED_ENABLED);
 
         if (References.checkOMS(getContext())) {
             for (int i = 0; i < overlaysLists.size(); i++) {
                 OverlaysItem currentOverlay = overlaysLists.get(i);
-                if (currentOverlay.isSelected() && currentOverlay.isOverlayEnabled()) {
-                    for (int j = 0; j < stateAll.size(); j++) {
-                        String current = stateAll.get(j);
-                        if (current.startsWith(currentOverlay.getPackageName())) {
+                if (currentOverlay.isSelected()) {
+                    for (int j = 0; j < stateEnabled.size(); j++) {
+                        String current = stateEnabled.get(j);
+                        if (current.startsWith(currentOverlay.getPackageName() + "." + currentOverlay.getThemeName())) {
                             checkedOverlays.add(current);
                         }
                     }
@@ -280,9 +275,37 @@ public class Overlays extends Fragment {
 
             if (checkedOverlays.size() != 0) {
                 // Begin disabling overlays
-                new disableTheme().execute(checkedOverlays);
+                if (silent) {
+                    new disableThemeSilent().execute(checkedOverlays);
+                } else {
+                    new disableTheme().execute(checkedOverlays);
+                }
             }
         }
+    }
+
+    public boolean needDisableFirst() {
+        overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
+        List<String> stateEnabled = ThemeManager.listOverlays(getContext(), STATE_APPROVED_ENABLED);
+
+        if (References.checkOMS(getContext())) {
+            for (int i = 0; i < overlaysLists.size(); i++) {
+                OverlaysItem currentOverlay = overlaysLists.get(i);
+                if (currentOverlay.isSelected()) {
+                    String currentFullName = currentOverlay.getFullOverlayParameters();
+                    if (stateEnabled.contains(currentFullName)) {
+                        continue;
+                    }
+                    for (int j = 0; j < stateEnabled.size(); j++) {
+                        String current = stateEnabled.get(j);
+                        if (current.startsWith(currentOverlay.getPackageName() + "." + currentOverlay.getThemeName())) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public void startDisable() {
@@ -326,71 +349,6 @@ public class Overlays extends Fragment {
                             R.string.toast_disabled5,
                             Toast.LENGTH_LONG).show();
                 }
-            } else {
-                compile_enable_mode = false;
-                enable_mode = false;
-                disable_mode = true;
-
-                for (int i = 0; i < overlaysLists.size(); i++) {
-                    OverlaysItem currentOverlay = overlaysLists.get(i);
-                    if (currentOverlay.isSelected()) {
-                        checkedOverlays.add(currentOverlay);
-                    } else {
-                        currentOverlay.setSelected(false);
-                        mAdapter.notifyDataSetChanged();
-                    }
-                }
-
-                String current_directory;
-                if (References.inNexusFilter()) {
-                    current_directory = PIXEL_NEXUS_DIR;
-                } else {
-                    current_directory = LEGACY_NEXUS_DIR;
-                }
-
-                if (!checkedOverlays.isEmpty()) {
-                    for (int i = 0; i < checkedOverlays.size(); i++) {
-                        FileOperations.mountRW();
-                        FileOperations.delete(getContext(), current_directory +
-                                checkedOverlays.get(i).getFullOverlayParameters() + ".apk");
-                        mAdapter.notifyDataSetChanged();
-                    }
-                    // Untick all options in the adapter after compiling
-                    toggle_all.setChecked(false);
-                    overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
-                    for (int i = 0; i < overlaysLists.size(); i++) {
-                        OverlaysItem currentOverlay = overlaysLists.get(i);
-                        if (currentOverlay.isSelected()) {
-                            currentOverlay.setSelected(false);
-                        }
-                    }
-                    Toast.makeText(getContext(),
-                            getString(R.string.toast_disabled6),
-                            Toast.LENGTH_SHORT).show();
-                    AlertDialog.Builder alertDialogBuilder =
-                            new AlertDialog.Builder(getContext());
-                    alertDialogBuilder.setTitle(
-                            getString(R.string.legacy_dialog_soft_reboot_title));
-                    alertDialogBuilder.setMessage(
-                            getString(R.string.legacy_dialog_soft_reboot_text));
-                    alertDialogBuilder.setPositiveButton(
-                            android.R.string.ok,
-                            (dialog, id12) -> ElevatedCommands.reboot());
-                    alertDialogBuilder.setNegativeButton(
-                            R.string.remove_dialog_later, (dialog, id1) -> {
-                                dialog.dismiss();
-                            });
-                    AlertDialog alertDialog = alertDialogBuilder.create();
-                    alertDialog.show();
-                } else {
-                    if (toggle_all.isChecked()) toggle_all.setChecked(false);
-                    is_active = false;
-                    Toast.makeText(getContext(),
-                            R.string.toast_disabled5,
-                            Toast.LENGTH_LONG).show();
-                }
-                is_active = false;
-                disable_mode = false;
             }
         }
     }
@@ -398,15 +356,16 @@ public class Overlays extends Fragment {
     public void startEnableNew() {
         overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
         ArrayList<String> checkedOverlays = new ArrayList<>();
-        List<String> stateAll = ThemeManager.listOverlays(getContext(), STATE_APPROVED_DISABLED);
+        List<String> stateDisabled = ThemeManager.listOverlays(getContext(), STATE_APPROVED_DISABLED);
 
         if (References.checkOMS(getContext())) {
             for (int i = 0; i < overlaysLists.size(); i++) {
                 OverlaysItem currentOverlay = overlaysLists.get(i);
-                if (currentOverlay.isSelected() && !currentOverlay.isOverlayEnabled()) {
-                    for (int j = 0; j < stateAll.size(); j++) {
-                        String current = stateAll.get(j);
-                        if (current.startsWith(currentOverlay.getPackageName())) {
+                String currentFullName = currentOverlay.getFullOverlayParameters();
+                if (currentOverlay.isSelected() && stateDisabled.contains(currentFullName)) {
+                    for (int j = 0; j < stateDisabled.size(); j++) {
+                        String current = stateDisabled.get(j);
+                        if (current.equals(currentFullName)) {
                             checkedOverlays.add(current);
                         }
                     }
@@ -775,18 +734,10 @@ public class Overlays extends Fragment {
                 context.getString(R.string.toast_compiled_updated_with_errors),
                 Toast.LENGTH_LONG).show();
 
-        boolean save_logs = prefs.getBoolean("autosave_logchar", true);
-        if (save_logs) {
-            new SendErrorReport(
-                    context,
-                    theme_pid,
-                    error_logs.toString(),
-                    failed_packages.toString(),
-                    true
-            ).execute();
+        try {
+            invokeLogCharDialog(context);
+        } catch (Exception e){
         }
-
-        invokeLogCharDialog(context);
     }
 
     public void invokeLogCharDialog(Context context) {
@@ -817,21 +768,6 @@ public class Overlays extends Fragment {
             dialog.dismiss();
         });
 
-        ImageButton send = (ImageButton) dialog.findViewById(R.id.send);
-        send.setVisibility(View.GONE);
-        if (References.getOverlayMetadata(context, theme_pid, metadataEmail) != null) {
-            send.setVisibility(View.VISIBLE);
-            send.setOnClickListener(v -> {
-                dialog.dismiss();
-                new SendErrorReport(
-                        context,
-                        theme_pid,
-                        error_logs.toString(),
-                        failed_packages.toString(),
-                        false
-                ).execute();
-            });
-        }
         dialog.show();
     }
 
@@ -1042,112 +978,6 @@ public class Overlays extends Fragment {
                     currentOverlay.setSelected(false);
                 }
                 mAdapter.notifyDataSetChanged();
-            }
-        }
-    }
-
-    private static class SendErrorReport extends AsyncTask<Void, Void, File> {
-        private WeakReference<Context> contextRef;
-        private String themePid;
-        private String errorLog;
-        private String themeName, themeAuthor, themeEmail;
-        private String emailSubject, emailBody;
-        private String failedPackages;
-        private ProgressDialog progressDialog;
-        private Boolean autosaveInstance;
-
-        SendErrorReport(Context context,
-                        String themePid,
-                        String errorLog,
-                        String failedPackages,
-                        Boolean autosaveInstance) {
-            contextRef = new WeakReference<>(context);
-            this.themePid = themePid;
-            this.errorLog = errorLog;
-            this.failedPackages = failedPackages;
-            this.autosaveInstance = autosaveInstance;
-
-            themeName = References.grabPackageName(context, themePid);
-            themeAuthor = References.getOverlayMetadata(context, themePid, References
-                    .metadataAuthor);
-            themeEmail = References.getOverlayMetadata(context, themePid, References
-                    .metadataEmail);
-
-            emailSubject = String.format(
-                    context.getString(R.string.logcat_email_subject), themeName);
-            emailBody = String.format(
-                    context.getString(R.string.logcat_email_body), themeAuthor, themeName);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            if (!autosaveInstance) {
-                progressDialog = new ProgressDialog(contextRef.get());
-                progressDialog.setIndeterminate(true);
-                progressDialog.setCancelable(false);
-                progressDialog.setMessage(
-                        contextRef.get().getString(R.string.logcat_processing_dialog));
-                progressDialog.show();
-            }
-        }
-
-        @Override
-        protected File doInBackground(Void... sUrl) {
-            String rom = References.checkFirmwareSupport(contextRef.get(),
-                    contextRef.get().getString(R.string.supported_roms_url),
-                    "supported_roms.xml");
-            String theme_version = References.grabAppVersion(contextRef.get(), themePid);
-            String rom_version = Build.VERSION.RELEASE + " - " + (!rom.isEmpty() ? rom : "Unknown");
-
-            String device = Build.MODEL + " (" + Build.DEVICE + ") " +
-                    "[" + Build.FINGERPRINT + "]";
-
-            String attachment = String.format(
-                    contextRef.get().getString(R.string.logcat_attachment_body),
-                    device,
-                    rom_version,
-                    String.valueOf(Substratum.VERSION_CODE),
-                    theme_version,
-                    failedPackages,
-                    errorLog);
-
-            File log = null;
-            if (autosaveInstance) {
-                References.writeLogCharFile(themePid, attachment);
-            } else {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HH:mm", Locale.US);
-                log = new File(Environment.getExternalStorageDirectory().getAbsolutePath() +
-                        "/theme_error-" + dateFormat.format(new Date()) + ".txt");
-                try (FileWriter fw = new FileWriter(log, false);
-                     BufferedWriter out = new BufferedWriter(fw)) {
-                    out.write(attachment);
-                } catch (IOException e) {
-                    // Suppress exception
-                }
-            }
-            return log;
-        }
-
-        @Override
-        protected void onPostExecute(File result) {
-            if (!autosaveInstance) {
-                progressDialog.dismiss();
-
-                Intent i = new Intent(Intent.ACTION_SEND);
-                i.setType("message/rfc822");
-                i.putExtra(Intent.EXTRA_EMAIL, new String[]{themeEmail});
-                i.putExtra(Intent.EXTRA_SUBJECT, emailSubject);
-                i.putExtra(Intent.EXTRA_TEXT, emailBody);
-                i.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(result));
-                try {
-                    contextRef.get().startActivity(Intent.createChooser(
-                            i, contextRef.get().getString(R.string.logcat_email_activity)));
-                } catch (ActivityNotFoundException ex) {
-                    Toast.makeText(contextRef.get(),
-                            R.string.logcat_email_activity_error,
-                            Toast.LENGTH_LONG)
-                            .show();
-                }
             }
         }
     }
@@ -1622,10 +1452,27 @@ public class Overlays extends Fragment {
                     if (mAdapter != null) startCompileUpdateMode();
                     break;
                 case "Disable":
-                    if (mAdapter != null) startDisableNew();
+                    if (mAdapter != null) startDisableNew(false);
                     break;
                 case "Enable":
-                    if (mAdapter != null) startEnableNew();
+                    if (mAdapter != null) {
+                        if (needDisableFirst()) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                            builder.setTitle(R.string.enable_overlay_warning_title);
+                            builder.setMessage(R.string.enable_overlay_systemui_warning)
+                                    .setPositiveButton(android.R.string.ok, (dialog, id18) -> {
+                                        dialog.dismiss();
+                                        startDisableNew(false);
+                                    })
+                                    .setNegativeButton(android.R.string.cancel, (dialog, id18) -> {
+                                        dialog.dismiss();
+                                    });
+                            builder.create();
+                            builder.show();
+                        } else {
+                            startEnableNew();
+                        }
+                    }
                     break;
             }
         }
@@ -1663,7 +1510,7 @@ public class Overlays extends Fragment {
         editor.commit();
     }
 
-    private void reloadList() {
+    public void reloadList() {
         overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
         for (int i = 0; i < overlaysLists.size(); i++) {
             OverlaysItem currentOverlay = overlaysLists.get(i);
@@ -1724,4 +1571,31 @@ public class Overlays extends Fragment {
             return null;
         }
     }
+
+    private class disableThemeSilent extends AsyncTask<ArrayList<String>, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(getContext());
+            mProgressDialog.setMessage(getResources().getString(R.string.overlay_disable_progress));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            try {
+                reloadList();
+                mProgressDialog.cancel();
+            } catch (Exception e) {
+            }
+        }
+
+        @Override
+        protected Void doInBackground(ArrayList<String>... overlays) {
+            ThemeManager.disableOverlaySilent(getContext(), overlays[0]);
+            return null;
+        }
+    }
+
 }

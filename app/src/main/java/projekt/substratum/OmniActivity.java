@@ -62,11 +62,9 @@ import java.util.List;
 
 import projekt.substratum.activities.base.SubstratumActivity;
 import projekt.substratum.common.References;
-import projekt.substratum.common.commands.ElevatedCommands;
 import projekt.substratum.common.commands.FileOperations;
 import projekt.substratum.common.platform.ThemeManager;
 import projekt.substratum.tabs.Overlays;
-import projekt.substratum.util.files.Root;
 import projekt.substratum.util.injectors.AOPTCheck;
 
 import static android.content.om.OverlayInfo.STATE_APPROVED_DISABLED;
@@ -130,6 +128,8 @@ public class OmniActivity extends SubstratumActivity {
             compile_update_selected = (TextView) findViewById(R.id.compile_update_selected);
             if (!checkOMS) {
                 compile_update_selected.setText(getString(R.string.fab_menu_compile_install));
+            } else {
+                compile_update_selected.setVisibility(View.GONE);
             }
             compile_update_selected.setOnClickListener(this);
 
@@ -280,7 +280,7 @@ public class OmniActivity extends SubstratumActivity {
         new AOPTCheck().injectAOPT(this, false);
 
         Overlays fragment = (Overlays) getSupportFragmentManager().findFragmentById(R.id.overlays);
-        if (!fragment.init(theme_name, theme_pid, encryption_key, iv_encrypt_key)) {
+        if (fragment != null && !fragment.init(theme_name, theme_pid, encryption_key, iv_encrypt_key)) {
             finish();
         }
 
@@ -291,28 +291,8 @@ public class OmniActivity extends SubstratumActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.theme_information_menu, menu);
 
-        // Start dynamically showing menu items
-        boolean isOMS = References.checkOMS(getApplicationContext());
-
-        if (!isOMS && !Root.checkRootAccess()) {
-            menu.findItem(R.id.restart_systemui).setVisible(false);
-            menu.findItem(R.id.auto_restart_systemui).setVisible(false);
-        }
-        if (!isOMS) {
-            menu.findItem(R.id.disable).setVisible(false);
-            menu.findItem(R.id.enable).setVisible(false);
-        }
-        if (isOMS) {
-            menu.findItem(R.id.reboot_device).setVisible(false);
-            menu.findItem(R.id.soft_reboot).setVisible(false);
-            menu.findItem(R.id.uninstall).setVisible(false);
-        }
-
-        if (!References.isUserApp(getApplicationContext(), theme_pid)) {
-            menu.findItem(R.id.uninstall).setVisible(false);
-        }
-
-        menu.findItem(R.id.clean_cache).setVisible(prefs.getBoolean("caching_enabled", false));
+        menu.findItem(R.id.disable).setVisible(false);
+        menu.findItem(R.id.enable).setVisible(false);
 
         return true;
     }
@@ -321,8 +301,8 @@ public class OmniActivity extends SubstratumActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         boolean isOMS = References.checkOMS(getApplicationContext());
         if (isOMS) {
-            menu.findItem(R.id.disable).setVisible(mStoragePerms);
-            menu.findItem(R.id.enable).setVisible(mStoragePerms);
+            //menu.findItem(R.id.disable).setVisible(mStoragePerms);
+            //menu.findItem(R.id.enable).setVisible(mStoragePerms);
             menu.findItem(R.id.clean).setVisible(mStoragePerms);
         }
         boolean enabled = prefs.getBoolean("enable_restart_systemui", true);
@@ -360,6 +340,7 @@ public class OmniActivity extends SubstratumActivity {
                                         String parent =
                                                 appInfo.metaData.getString(metadataOverlayParent);
                                         if (parent != null && parent.equals(theme_pid)) {
+                                            // we want ourself at the end to see nice progress
                                             all_overlays.add(current);
                                         }
                                     }
@@ -369,10 +350,7 @@ public class OmniActivity extends SubstratumActivity {
                             }
 
                             // Begin uninstalling overlays for this package
-                            ThemeManager.uninstallOverlay(
-                                    getApplicationContext(),
-                                    all_overlays
-                            );
+                            new cleanTheme().execute(all_overlays);
                         })
                         .setNegativeButton(R.string.dialog_cancel, (dialog, id19) -> {
                             // User cancelled the dialog
@@ -380,22 +358,6 @@ public class OmniActivity extends SubstratumActivity {
                 // Create the AlertDialog object and return it
                 builder1.create();
                 builder1.show();
-                return true;
-            case R.id.clean_cache:
-                AlertDialog.Builder builder2 = new AlertDialog.Builder(OmniActivity.this);
-                builder2.setTitle(theme_name);
-                builder2.setIcon(References.grabAppIcon(getApplicationContext(), theme_pid));
-                builder2.setMessage(R.string.clean_cache_dialog_body)
-                        .setPositiveButton(R.string.dialog_ok, (dialog, id110) -> {
-                            // Dismiss the dialog
-                            dialog.dismiss();
-                            new cleanInstalledTheme().execute(theme_pid);
-                        })
-                        .setNegativeButton(R.string.dialog_cancel, (dialog, id17) ->
-                                dialog.cancel());
-                // Create the AlertDialog object and return it
-                builder2.create();
-                builder2.show();
                 return true;
             case R.id.disable:
                 AlertDialog.Builder builder3 = new AlertDialog.Builder(OmniActivity.this);
@@ -483,31 +445,8 @@ public class OmniActivity extends SubstratumActivity {
                 builder4.create();
                 builder4.show();
                 return true;
-            case R.id.uninstall:
-                AlertDialog.Builder builder5 = new AlertDialog.Builder(OmniActivity.this);
-                builder5.setTitle(theme_name);
-                builder5.setIcon(References.grabAppIcon(getApplicationContext(), theme_pid));
-                builder5.setMessage(R.string.uninstall_dialog_text)
-                        .setPositiveButton(R.string.dialog_ok, (dialog, id12) -> {
-                            // Dismiss the dialog
-                            dialog.dismiss();
-                            new uninstallTheme().execute("");
-                        })
-                        .setNegativeButton(R.string.dialog_cancel, (dialog, id1) -> {
-                            // User cancelled the dialog
-                        });
-                // Create the AlertDialog object and return it
-                builder5.create();
-                builder5.show();
-                return true;
             case R.id.restart_systemui:
                 ThemeManager.restartSystemUI(getApplicationContext());
-                return true;
-            case R.id.reboot_device:
-                ElevatedCommands.reboot();
-                return true;
-            case R.id.soft_reboot:
-                ElevatedCommands.softReboot();
                 return true;
             case R.id.about_substratum:
                 startActivity(new Intent(this, TeamActivity.class));
@@ -643,7 +582,7 @@ public class OmniActivity extends SubstratumActivity {
         }
     }
 
-    private class cleanInstalledTheme extends AsyncTask<String, Void, Void> {
+    private class cleanTheme extends AsyncTask<ArrayList<String>, Void, Void> {
         @Override
         protected void onPreExecute() {
             mProgressDialog = new ProgressDialog(OmniActivity.this);
@@ -662,9 +601,10 @@ public class OmniActivity extends SubstratumActivity {
         }
 
         @Override
-        protected Void doInBackground(String... theme_pid) {
-            FileOperations.delete(
-                    getApplicationContext(), getBuildDirPath() + theme_pid + "/");
+        protected Void doInBackground(ArrayList<String>... overlays) {
+            ThemeManager.uninstallOverlay(
+                    getApplicationContext(),
+                    overlays[0]);
             return null;
         }
     }

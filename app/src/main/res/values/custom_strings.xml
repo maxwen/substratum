@@ -7,4 +7,6 @@
     <string name="overlay_enable_progress">Enabling overlays&#8230;</string>
     <string name="overlay_disable_progress">Disabling overlays&#8230;</string>
     <string name="overlay_clean_progress">Cleaning overlays&#8230;</string>
+    <string name="enable_overlay_warning_title">Enable overlays</string>
+    <string name="enable_overlay_systemui_warning">You need to disable current enabled overlay first. Continue with disabling overlays?</string>
 </resources>
