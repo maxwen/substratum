@@ -31,7 +31,8 @@ public class Substratum extends Application {
 
     private static final String BINDER_TAG = "OmniBinderService";
     private static Substratum substratum;
-    public static final int VERSION_CODE = 815;
+    public static final int VERSION_CODE = 816;
+    public static final int VERSION_CODE_OMNI = 1;
 
     public static Substratum getInstance() {
         return substratum;

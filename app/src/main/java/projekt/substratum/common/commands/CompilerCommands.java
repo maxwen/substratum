@@ -35,6 +35,7 @@ import static projekt.substratum.common.References.metadataOverlayType1c;
 import static projekt.substratum.common.References.metadataOverlayType2;
 import static projekt.substratum.common.References.metadataOverlayType3;
 import static projekt.substratum.common.References.metadataOverlayVersion;
+import static projekt.substratum.common.References.metadataOverlayVersionOmni;
 
 public class CompilerCommands {
 
@@ -119,6 +120,10 @@ public class CompilerCommands {
                 // Track the Substratum version number
                 "        <meta-data android:name=\"" + metadataOverlayVersion + "\" " +
                 "android:value=\"" + Substratum.VERSION_CODE + "\"/>\n" +
+
+                // Track the Omni version number
+                "        <meta-data android:name=\"" + metadataOverlayVersionOmni + "\" " +
+                "android:value=\"" + Substratum.VERSION_CODE_OMNI + "\"/>\n" +
 
                 "    </application>\n" +
                 "</manifest>\n";

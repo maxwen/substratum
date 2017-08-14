@@ -159,6 +159,8 @@ public class References {
     public static final String metadataOverlayType3 = "Substratum_Type3";
     public static final String metadataOverlayVersion = "Substratum_Version";
     public static final String metadataIconPackParent = "Substratum_IconPack";
+    public static final String metadataOverlayVersionOmni = "Substratum_Version_Omni";
+
     // These are Samsung specific manifest values
     public static final Boolean toggleShowSamsungOverlayInSettings = false;
     public static final String permissionSamsungOverlay =
@@ -1985,5 +1987,18 @@ public class References {
                     intent.getByteArrayExtra("encryption_key"),
                     intent.getByteArrayExtra("iv_encrypt_key"));
         }
+    }
+
+    public static int grabOverlayOmniVersion(Context context, String package_name) {
+        try {
+            ApplicationInfo appInfo = context.getPackageManager().getApplicationInfo(
+                    package_name, PackageManager.GET_META_DATA);
+            if (appInfo.metaData != null) {
+                return appInfo.metaData.getInt(metadataOverlayVersionOmni);
+            }
+        } catch (Exception e) {
+            // Suppress warning
+        }
+        return 0;
     }
 }

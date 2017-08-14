@@ -653,4 +653,19 @@ public class OmniActivity extends SubstratumActivity {
         mStoragePerms = true;
         floatingActionButton.show();
     }
+
+    private boolean checkIfOverlaysAreFromOmni() {
+        List<String> overlays = ThemeManager.listAllOverlays(getApplicationContext());
+        for (int i = 0; i < overlays.size(); i++) {
+            int current_version = References.grabOverlayOmniVersion(
+                    getApplicationContext(),
+                    overlays.get(i));
+            if (current_version == 0) {
+                Log.d("OverlayOmniCheck",
+                        "Overlay is not built with OmniSubs");
+                return true;
+            }
+        }
+        return false;
+    }
 }
