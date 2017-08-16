@@ -32,11 +32,7 @@ import android.widget.TextView;
 
 import org.omnirom.substratum.R;
 
-import java.io.File;
 import java.util.List;
-
-import static projekt.substratum.common.References.LEGACY_NEXUS_DIR;
-import static projekt.substratum.common.References.PIXEL_NEXUS_DIR;
 
 public class OverlaysAdapter extends RecyclerView.Adapter<OverlaysAdapter.ViewHolder> {
 
@@ -155,28 +151,22 @@ public class OverlaysAdapter extends RecyclerView.Adapter<OverlaysAdapter.ViewHo
     // Magical easy reset checking for the adapter
     // Function that runs when a user picks a spinner dropdown item that is index 0
     private void zeroIndex(Context context, OverlaysItem current_object, ViewHolder viewHolder) {
+        viewHolder.overlayState.setVisibility(View.GONE);
         if (current_object.isPackageInstalled((current_object.getFullOverlayParameters()))) {
             viewHolder.overlayState.setVisibility(View.VISIBLE);
             // Check whether currently installed overlay is up to date with
             // theme_pid's versionName
             if (!current_object.compareInstalledOverlay()) {
-                String format = String.format(context.getString(R.string.overlays_update_available),
-                        current_object.versionName);
-                viewHolder.overlayState.setText(format);
+                viewHolder.overlayState.setText(context.getString(R.string.overlays_update_available_new));
                 viewHolder.overlayState.setTextColor(
                         context.getColor(R.color.overlay_update_available));
-            } else {
-                viewHolder.overlayState.setText(context.getString(R.string.overlays_up_to_date));
-                viewHolder.overlayState.setTextColor(
-                        context.getColor(R.color.overlay_update_not_needed));
             }
-        } else if (viewHolder.overlayState.getVisibility() == View.VISIBLE) {
+        } else {
+            viewHolder.overlayState.setVisibility(View.VISIBLE);
             viewHolder.overlayState.setText(
                     context.getString(R.string.overlays_overlay_not_installed));
             viewHolder.overlayState.setTextColor(
                     context.getColor(R.color.overlay_not_approved_list_entry));
-        } else {
-            viewHolder.overlayState.setVisibility(View.GONE);
         }
         if (current_object.isOverlayEnabled()) {
             viewHolder.overlayTargetPackageName.setTextColor(
@@ -193,27 +183,20 @@ public class OverlaysAdapter extends RecyclerView.Adapter<OverlaysAdapter.ViewHo
     // Function that runs when a user picks a spinner dropdown item that is index >= 1
     private void commitChanges(Context context, OverlaysItem current_object,
                                ViewHolder viewHolder, String packageName) {
+        viewHolder.overlayState.setVisibility(View.GONE);
         if (current_object.isPackageInstalled(
                 current_object.getPackageName() + "." + current_object.getThemeName() +
                         "." + packageName +
                         ((current_object.getBaseResources().length() > 0) ?
                                 "." + current_object.getBaseResources() : ""))) {
-            viewHolder.overlayState.setVisibility(View.VISIBLE);
             // Check whether currently installed overlay is up to date with
             // theme_pid's versionName
             if (!current_object.compareInstalledVariantOverlay(
                     packageName)) {
-                String format = String.format(context.getString(R.string.overlays_update_available),
-                        current_object.versionName);
-
-                viewHolder.overlayState.setText(format);
+                viewHolder.overlayState.setVisibility(View.VISIBLE);
+                viewHolder.overlayState.setText(context.getString(R.string.overlays_update_available_new));
                 viewHolder.overlayState.setTextColor(
                         context.getColor(R.color.overlay_update_available));
-            } else {
-                viewHolder.overlayState.setText(
-                        context.getString(R.string.overlays_up_to_date));
-                viewHolder.overlayState.setTextColor(
-                        context.getColor(R.color.overlay_update_not_needed));
             }
             if (current_object.isOverlayEnabled()) {
                 viewHolder.overlayTargetPackageName.setTextColor(
@@ -226,7 +209,8 @@ public class OverlaysAdapter extends RecyclerView.Adapter<OverlaysAdapter.ViewHo
                 viewHolder.overlayTargetPackageName.setTextColor(
                         context.getColor(R.color.overlay_not_installed_list_entry));
             }
-        } else if (viewHolder.overlayState.getVisibility() == View.VISIBLE) {
+        } else {
+            viewHolder.overlayState.setVisibility(View.VISIBLE);
             viewHolder.overlayState.setText(
                     context.getString(R.string.overlays_overlay_not_installed));
             viewHolder.overlayState.setTextColor(
@@ -242,8 +226,6 @@ public class OverlaysAdapter extends RecyclerView.Adapter<OverlaysAdapter.ViewHo
                 viewHolder.overlayTargetPackageName.setTextColor(
                         context.getColor(R.color.overlay_not_installed_list_entry));
             }
-        } else {
-            viewHolder.overlayState.setVisibility(View.GONE);
         }
     }
 
@@ -259,27 +241,22 @@ public class OverlaysAdapter extends RecyclerView.Adapter<OverlaysAdapter.ViewHo
 
         viewHolder.overlayTargetPackage.setText(current_object.getPackageName());
 
+        viewHolder.overlayState.setVisibility(View.GONE);
+
         if (current_object.isPackageInstalled(
                 current_object.getPackageName() + "." + current_object.getThemeName() +
                         ((current_object.getBaseResources().length() > 0) ?
                                 "." + current_object.getBaseResources() : ""))) {
-            viewHolder.overlayState.setVisibility(View.VISIBLE);
             // Check whether currently installed overlay is up to date with theme_pid's versionName
             if (!current_object.compareInstalledOverlay()) {
-                String format = String.format(
-                        context.getString(R.string.overlays_update_available),
-                        current_object.versionName);
-                viewHolder.overlayState.setText(format);
+                viewHolder.overlayState.setVisibility(View.VISIBLE);
+                viewHolder.overlayState.setText(context.getString(R.string.overlays_update_available_new));
                 viewHolder.overlayState.setTextColor(
                         context.getColor(R.color.overlay_update_available));
-            } else {
-                viewHolder.overlayState.setText(context.getString(R.string.overlays_up_to_date));
-                viewHolder.overlayState.setTextColor(
-                        context.getColor(R.color.overlay_update_not_needed));
             }
-        } else {
-            viewHolder.overlayState.setVisibility(View.GONE);
         }
+
+        viewHolder.checkBox.setVisibility(current_object.isAndroidPackage() ? View.INVISIBLE : View.VISIBLE);
 
         viewHolder.checkBox.setChecked(current_object.isSelected());
 
@@ -354,27 +331,6 @@ public class OverlaysAdapter extends RecyclerView.Adapter<OverlaysAdapter.ViewHo
                                 context.getColor(R.color.overlay_not_installed_list_entry));
                     }
                 }
-            } else {
-                    // At this point, the object is an RRO formatted check
-                    File file = new File(PIXEL_NEXUS_DIR);
-                    File file2 = new File(LEGACY_NEXUS_DIR);
-                    if (file.exists() || file2.exists()) {
-                        File filer1 = new File(
-                                file.getAbsolutePath() + "/" +
-                                        current_object.getPackageName() + "." +
-                                        current_object.getThemeName() + ".apk");
-                        File filer2 = new File(
-                                file2.getAbsolutePath() + "/" +
-                                        current_object.getPackageName() + "." +
-                                        current_object.getThemeName() + ".apk");
-                        if (filer1.exists() || filer2.exists()) {
-                            viewHolder.overlayTargetPackageName.setTextColor(
-                                    context.getColor(R.color.overlay_installed_list_entry));
-                        } else {
-                            viewHolder.overlayTargetPackageName.setTextColor(
-                                    context.getColor(R.color.overlay_not_installed_list_entry));
-                        }
-                    }
             }
         } else {
             viewHolder.optionsSpinner.setVisibility(View.GONE);

@@ -22,8 +22,7 @@
               android:layout_height="wrap_content"
               android:background="@color/colorPrimary"
               android:orientation="horizontal"
-              android:paddingBottom="5dp"
-              android:paddingTop="5dp">
+              android:foreground="?android:attr/selectableItemBackground" >
 
     <ImageView
         android:id="@+id/variant_hex"

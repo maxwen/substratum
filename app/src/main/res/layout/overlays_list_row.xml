@@ -22,69 +22,79 @@
                                     android:id="@+id/card"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:clickable="true"
-                                    android:foreground="?android:selectableItemBackground"
-                                    android:orientation="horizontal"
                                     android:layout_marginEnd="8dp"
                                     android:layout_marginStart="8dp"
                                     android:layout_marginTop="2dp"
+                                    android:clickable="true"
+                                    android:foreground="?android:selectableItemBackground"
+                                    android:orientation="horizontal"
+                                    app:cardBackgroundColor="@color/main_screen_card_background"
                                     app:cardCornerRadius="2dp"
-                                    app:cardUseCompatPadding="true"
-                                    app:cardBackgroundColor="@color/main_screen_card_background">
+                                    app:cardUseCompatPadding="true">
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="15dp">
+        android:layout_margin="10dp"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/app_icon"
-            android:layout_width="48dp"
-            android:layout_height="60dp"
-            android:layout_marginEnd="10dp"
-            android:src="@drawable/default_overlay_icon"/>
-
-        <RelativeLayout
-            android:id="@+id/relativeLayout"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/app_icon">
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp">
 
-            <TextView
-                android:id="@+id/overlayTargetPackageName"
+            <ImageView
+                android:id="@+id/app_icon"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/default_overlay_icon"/>
+
+            <LinearLayout
+                android:id="@+id/relativeLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/overlayTargetPackageName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/overlay_not_installed_list_entry"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:id="@+id/overlayTargetPackage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/theme_information_card_subtext"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:id="@+id/installedState"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/theme_information_card_subtext"
+                    android:textSize="16sp"/>
+
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/checkBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:textColor="@color/overlay_not_installed_list_entry"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
+                android:layout_gravity="center_vertical"/>
+        </LinearLayout>
 
-            <TextView
-                android:id="@+id/overlayTargetPackage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/overlayTargetPackageName"
-                android:textColor="@color/theme_information_card_subtext"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/installedState"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/overlayTargetPackage"
-                android:textColor="@color/theme_information_card_subtext"
-                android:textSize="16sp"/>
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/relativeLayout"
-            android:layout_marginEnd="-8dp"
-            android:layout_marginStart="-5dp"
-            android:layout_marginTop="10dp">
+            android:orientation="vertical">
 
             <Spinner
                 android:id="@+id/optionsSpinner"
@@ -94,28 +104,17 @@
             <Spinner
                 android:id="@+id/optionsSpinner2"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/optionsSpinner"/>
+                android:layout_height="wrap_content"/>
 
             <Spinner
                 android:id="@+id/optionsSpinner3"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/optionsSpinner2"/>
+                android:layout_height="wrap_content"/>
 
             <Spinner
                 android:id="@+id/optionsSpinner4"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/optionsSpinner3"/>
-
-        </RelativeLayout>
-
-        <CheckBox
-            android:id="@+id/checkBox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"/>
-
-    </RelativeLayout>
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+    </LinearLayout>
 </android.support.v7.widget.CardView>

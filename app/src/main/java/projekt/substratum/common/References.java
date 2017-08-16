@@ -21,11 +21,8 @@ package projekt.substratum.common;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.AppOpsManager;
-import android.app.NotificationManager;
-import android.app.ProgressDialog;
 import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -42,17 +39,13 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.omnirom.substratum.R;
 
@@ -77,27 +70,17 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
 import projekt.substratum.activities.launch.ThemeLaunchActivity;
 import projekt.substratum.common.platform.ThemeInterfacerService;
 import projekt.substratum.services.system.InterfacerAuthorizationReceiver;
-import projekt.substratum.util.compilers.CacheCreator;
 import projekt.substratum.util.files.IOUtils;
-import projekt.substratum.util.injectors.AOPTCheck;
 import projekt.substratum.util.readers.ReadVariantPrioritizedColor;
 
 public class References {
 
-    public static final Boolean ENABLE_ROOT_CHECK = true; // Force the app to run without root
-    public static final Boolean ENABLE_EXTRAS_DIALOG = false; // Show a dialog when applying extras
     public static final Boolean ENABLE_AOPT_OUTPUT = false; // WARNING, DEVELOPERS - BREAKS COMPILE
     public static final Boolean ENABLE_PACKAGE_LOGGING = true; // Show time/date/place of install
     public static final Boolean ENABLE_DIRECT_ASSETS_LOGGING = false; // Self explanatory
@@ -107,30 +90,15 @@ public class References {
     // These are specific log tags for different classes
     public static final String SUBSTRATUM_BUILDER = "SubstratumBuilder";
     public static final String SUBSTRATUM_LOG = "SubstratumLogger";
-    public static final String SUBSTRATUM_ICON_BUILDER = "SubstratumIconBuilder";
-    public static final String SUBSTRATUM_VALIDATOR = "SubstratumValidator";
-    // These are package names for our backend systems
     public static final String INTERFACER_PACKAGE = "projekt.interfacer";
     public static final String INTERFACER_SERVICE = INTERFACER_PACKAGE + ".services.JobService";
-    // Samsung package names
-    public static final String SST_ADDON_PACKAGE = "projekt.sungstratum";
     // Specific intent for receiving completion status on backend
     public static final String INTERFACER_BINDED = INTERFACER_PACKAGE + ".INITIALIZE";
     public static final String STATUS_CHANGED = INTERFACER_PACKAGE + ".STATUS_CHANGED";
-    public static final String CRASH_PACKAGE_NAME = "projekt.substratum.EXTRA_PACKAGE_NAME";
-    public static final String CRASH_REPEATING = "projekt.substratum.EXTRA_CRASH_REPEATING";
-    // System intents to catch
-    public static final String BOOT_COMPLETED = Intent.ACTION_BOOT_COMPLETED;
-    public static final String PACKAGE_ADDED = Intent.ACTION_PACKAGE_ADDED;
-    public static final String PACKAGE_FULLY_REMOVED = Intent.ACTION_PACKAGE_FULLY_REMOVED;
     // App intents to send
-    public static final String MANAGER_REFRESH = "projekt.substratum.MANAGER_REFRESH";
     public static final String KEY_RETRIEVAL = "Substratum.KeyRetrieval";
     public static final String TEMPLATE_THEME_MODE = "projekt.substratum.THEME";
     public static final String TEMPLATE_GET_KEYS = "projekt.substratum.GET_KEYS";
-    // Keep it simple, stupid!
-    public static final int HIDDEN_CACHING_MODE_TAP_COUNT = 7;
-    public static final int SHOWCASE_SHUFFLE_COUNT = 5;
     // Delays for Icon Pack Handling
     public static final int MAIN_WINDOW_REFRESH_DELAY = 2000;
     public static final int FIRST_WINDOW_REFRESH_DELAY = 1000;
@@ -155,50 +123,19 @@ public class References {
     public static final String metadataIconPackParent = "Substratum_IconPack";
     public static final String metadataOverlayVersionOmni = "Substratum_Version_Omni";
 
-    // These are Samsung specific manifest values
-    public static final Boolean toggleShowSamsungOverlayInSettings = false;
-    public static final String permissionSamsungOverlay =
-            "com.samsung.android.permission.SAMSUNG_OVERLAY_COMPONENT";
-    // These strings control the nav drawer filter for ThemeFragment
-    public static final String homeFragment = "";
     public static final String overlaysFragment = "overlays";
-    public static final String bootAnimationsFragment = "bootanimation";
-    public static final String fontsFragment = "fonts";
-    public static final String soundsFragment = "audio";
     public static final String wallpaperFragment = "wallpapers";
-    // These strings control the showcase metadata parsing
-    public static final String paidTheme = "paid";
-    public static final String showcaseFonts = "fonts";
-    public static final String showcaseWallpapers = "wallpapers";
-    public static final String showcaseBootanimations = "bootanimations";
-    public static final String showcaseOverlays = "overlays";
-    public static final String showcaseSounds = "sounds";
     // These strings control the directories that Substratum uses
     public static final String EXTERNAL_STORAGE_CACHE = "/.substratum/";
     public static final String SUBSTRATUM_BUILDER_CACHE = "/SubstratumBuilder/";
-    public static final String SUBSTRATUM_ICON_STUDIO_CACHE = "/IconStudio/";
-    // These strings control the legacy overlay location
-    public static final String DATA_RESOURCE_DIR = "/data/resource-cache/";
-    public static final String PIXEL_NEXUS_DIR = "/system/overlay/";
-    public static final String LEGACY_NEXUS_DIR = "/system/vendor/overlay/";
-    public static final String VENDOR_DIR = "/vendor/overlay/";
     // Notification Channel
     public static final String DEFAULT_NOTIFICATION_CHANNEL_ID = "default";
     public static final String ONGOING_NOTIFICATION_CHANNEL_ID = "ongoing";
     private static final String TEMPLATE_RECEIVE_KEYS = "projekt.substratum.RECEIVE_KEYS";
-    private static final String metadataSamsungSupport = "Substratum_Samsung";
-    // This controls the filter used by the post-6.0.0 template checker
     private static final String SUBSTRATUM_THEME = "projekt.substratum.THEME";
     private static final String SUBSTRATUM_LAUNCHER_CLASS = ".SubstratumLauncher";
     private static final String SUBSTRATUM_LAUNCHER_CLASS_PATH =
             "substratum.theme.template.SubstratumLauncher";
-    // This controls the package name for the specified launchers allowed for Studio
-    private static final String NOVA_LAUNCHER = "com.novalauncher.THEME";
-    // November security update (incompatible firmware) timestamp;
-    private static final long NOVEMBER_PATCH_TIMESTAMP = 1478304000000L;
-    private static final long JANUARY_PATCH_TIMESTAMP = 1483549200000L;
-    // Specific intents Substratum should be listening to
-    private static final String APP_CRASHED = "projekt.substratum.APP_CRASHED";
     // Metadata used in theme templates to denote specific parts of a theme
     private static final String metadataVersion = "Substratum_Plugin";
     private static final String metadataThemeReady = "Substratum_ThemeReady";
@@ -234,12 +171,6 @@ public class References {
                     "Failed to register broadcast receivers for Substratum functionality...");
         }
     }
-
-
-    public static boolean isCachingEnabled(Context context) {
-        return false;
-    }
-
 
     public static int getDeviceEncryptionStatus(Context context) {
         // 0: ENCRYPTION_STATUS_UNSUPPORTED
@@ -433,61 +364,6 @@ public class References {
         return result;
     }
 
-    // Load SharedPreference defaults
-    public static void loadDefaultConfig(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("show_app_icon", true);
-        editor.putBoolean("substratum_oms", checkOMS(context));
-        editor.putBoolean("show_template_version", false);
-        editor.putBoolean("vibrate_on_compiled", false);
-        editor.putBoolean("nougat_style_cards", false);
-        editor.putBoolean("aopt_debug", false);
-        editor.putBoolean("theme_debug", false);
-        editor.putBoolean("force_english", false);
-        editor.putBoolean("floatui_show_android_system_overlays", false);
-        editor.putBoolean("alphabetize_showcase", false);
-        editor.putBoolean("complexion", true);
-        editor.putString("compiler", "aapt");
-        editor.putBoolean("crash_receiver", true);
-        editor.putBoolean("enable_swapping_overlays", false);
-        editor.putBoolean("overlay_alert", false);
-        editor.putBoolean("overlay_updater", false);
-        editor.putBoolean("theme_updater", false);
-        editor.putBoolean("show_dangerous_samsung_overlays", false);
-        editor.putBoolean("autosave_logchar", true);
-        editor.putBoolean("automatic_logchar_cleanup", false);
-        editor.remove("display_old_themes");
-        editor.remove("seen_restore_warning");
-        editor.remove("previous_logchar_cleanup");
-
-        // Initial parse of what is installed on the device
-        Set<String> installed_themes = new TreeSet<>();
-        List<ResolveInfo> all_themes = getThemes(context);
-        for (int i = 0; i < all_themes.size(); i++) {
-            installed_themes.add(all_themes.get(i).activityInfo.packageName);
-        }
-        editor.putStringSet("installed_themes", installed_themes);
-
-        Set<String> installed_icon_packs = new TreeSet<>();
-        List<ResolveInfo> all_icon_packs = getIconPacks(context);
-        for (int i = 0; i < all_icon_packs.size(); i++) {
-            installed_icon_packs.add(all_icon_packs.get(i).activityInfo.packageName);
-        }
-        editor.putStringSet("installed_iconpacks", installed_icon_packs);
-
-        editor.apply();
-        editor = context.getSharedPreferences("substratum_state", Context.MODE_PRIVATE).edit();
-        editor.putBoolean("is_updating", false);
-        editor.apply();
-        new AOPTCheck().injectAOPT(context, true);
-    }
-
-    // This method configures the new devices and their configuration of their vendor folders
-    public static Boolean inNexusFilter() {
-        return Arrays.asList(Resources.NEXUS_FILTER).contains(Build.DEVICE);
-    }
-
     // This method checks whether there is any network available for Wallpapers
     public static boolean isNetworkAvailable(Context mContext) {
         ConnectivityManager connectivityManager
@@ -651,14 +527,6 @@ public class References {
             // Suppress warning
         }
         return grabAppIcon(context, package_name);
-    }
-
-    public static List<ResolveInfo> getIconPacks(Context context) {
-        // Scavenge through the packages on the device with specific launcher metadata in
-        // their manifest
-        PackageManager packageManager = context.getPackageManager();
-        return packageManager.queryIntentActivities(new Intent(NOVA_LAUNCHER),
-                PackageManager.GET_META_DATA);
     }
 
     public static List<ResolveInfo> getThemes(Context context) {
@@ -1103,34 +971,6 @@ public class References {
         return getOverlayMetadata(mContext, package_name, metadataOverlayTarget);
     }
 
-    // Grab IconPack Parent
-    public static Boolean grabIconPack(Context mContext, String package_name,
-                                       String expectedPackName) {
-        String icon_pack = getOverlayMetadata(mContext, package_name, metadataOverlayTarget);
-        return icon_pack != null && icon_pack.equals(expectedPackName);
-    }
-
-    // Grab IconPack Parent
-    public static String grabIconPack(Context mContext, String package_name) {
-        return getOverlayMetadata(mContext, package_name, metadataIconPackParent);
-    }
-
-    public static boolean isAuthorizedDebugger(Context context) {
-        Signature[] self = getSelfSignature(context);
-        int[] authorized = Resources.ANDROID_STUDIO_DEBUG_KEYS;
-        boolean isDebuggable = isPackageDebuggable(context, context.getPackageName());
-        for (int anAuthorized : authorized) {
-            if (anAuthorized == self[0].hashCode() && isDebuggable) {
-                Log.d(SUBSTRATUM_LOG,
-                        "Setting up environment for an authorized developer.");
-                return true;
-            }
-        }
-        Log.d(SUBSTRATUM_LOG,
-                "Setting up environment for a production build user.");
-        return false;
-    }
-
     @SuppressLint("PackageManagerGetSignatures")
     private static Signature[] getSelfSignature(Context context) {
         Signature[] sigs = new Signature[0];
@@ -1163,31 +1003,6 @@ public class References {
             nnfe.printStackTrace();
         }
         return 0;
-    }
-
-    // Check if notification is visible for the user
-    public static boolean isNotificationVisible(Context mContext, int notification_id) {
-        NotificationManager mNotificationManager = (NotificationManager)
-                mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        assert mNotificationManager != null;
-        StatusBarNotification[] notifications = mNotificationManager.getActiveNotifications();
-        for (StatusBarNotification notification : notifications) {
-            if (notification.getId() == notification_id) return true;
-        }
-        return false;
-    }
-
-    // Clear all of the current notifications of Substratum when a cache clear is called
-    public static void clearAllNotifications(Context mContext) {
-        NotificationManager mNotificationManager = (NotificationManager)
-                mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        assert mNotificationManager != null;
-        StatusBarNotification[] notifications = mNotificationManager.getActiveNotifications();
-        for (StatusBarNotification notification : notifications) {
-            if (Objects.equals(notification.getPackageName(), mContext.getPackageName())) {
-                mNotificationManager.cancel(notification.getId());
-            }
-        }
     }
 
     // Check usage permissions
@@ -1234,74 +1049,11 @@ public class References {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    public static void sendKillMessage(Context context) {
-        Log.d("SubstratumKiller",
-                "A crucial action has been conducted by the user and Substratum is now shutting " +
-                        "down!");
-        Intent intent = new Intent("MainActivity.KILL");
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }
-
     public static void sendRefreshMessage(Context context) {
         Log.d("ThemeFragmentRefresher",
                 "A theme has been modified, sending update signal to refresh the list!");
         Intent intent = new Intent("ThemeFragment.REFRESH");
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }
-
-    public static void sendOverlayRefreshMessage(Context context) {
-        Log.d("OverlayRefresher",
-                "A theme has been modified, sending update signal to refresh the list!");
-        Intent intent = new Intent("Overlay.REFRESH");
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }
-
-    public static void sendRefreshManagerMessage(Context context) {
-        Intent intent = new Intent(MANAGER_REFRESH);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }
-
-    // Locate the proper launch intent for the themes
-    @SuppressWarnings("SameParameterValue")
-    public static Intent sendLaunchIntent(Context mContext, String currentTheme,
-                                          boolean theme_legacy, String theme_mode,
-                                          Boolean notification) {
-        Intent originalIntent = new Intent(Intent.ACTION_MAIN);
-        if (theme_legacy)
-            originalIntent.putExtra("theme_legacy", true);
-        if (theme_mode != null) {
-            originalIntent.putExtra("theme_mode", theme_mode);
-        }
-        if (notification) {
-            originalIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        }
-        originalIntent.putExtra("hash_passthrough", hashPassthrough(mContext));
-        originalIntent.putExtra("certified", true);
-        try {
-            PackageManager pm = mContext.getPackageManager();
-            PackageInfo info = pm.getPackageInfo(currentTheme, PackageManager.GET_ACTIVITIES);
-            ActivityInfo[] list = info.activities;
-            for (ActivityInfo aList : list) {
-                // We need to look for what the themer assigned the class to be! This is a dynamic
-                // function that only launches the correct SubstratumLauncher class. Having it
-                // hardcoded is bad.
-                if (aList.name.equals(currentTheme + SUBSTRATUM_LAUNCHER_CLASS)) {
-                    originalIntent.setComponent(
-                            new ComponentName(
-                                    currentTheme, currentTheme + SUBSTRATUM_LAUNCHER_CLASS));
-                    return originalIntent;
-                } else if (aList.name.equals(SUBSTRATUM_LAUNCHER_CLASS_PATH)) {
-                    originalIntent.setComponent(
-                            new ComponentName(
-                                    currentTheme, SUBSTRATUM_LAUNCHER_CLASS_PATH));
-                    return originalIntent;
-                }
-            }
-        } catch (Exception e) {
-            // Suppress warning
-        }
-        return null;
     }
 
     // Launch intent for a theme
@@ -1451,7 +1203,7 @@ public class References {
 
     public static boolean needsRecreate(Context context, ArrayList<String> list) {
         for (String o : list) {
-            if (o.equals("android") || o.equals("projekt.substratum")) {
+            if (o.equals("android") || o.equals("org.omnirom.substratum")) {
                 return false;
             }
         }
@@ -1702,153 +1454,6 @@ public class References {
             bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    // This class serves to update the theme's cache on demand
-    public static class SubstratumThemeUpdate extends AsyncTask<Void, Integer, String> {
-        private final String TAG = "SubstratumThemeUpdate";
-        private ProgressDialog progress;
-        private String theme_name, theme_package, theme_mode;
-        private Boolean launch = false;
-        private Boolean cacheable = false;
-        private Context mContext;
-        private LocalBroadcastManager localBroadcastManager;
-        private KeyRetrieval keyRetrieval;
-        private Intent securityIntent;
-        private Cipher cipher;
-        private Handler handler = new Handler();
-        private Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "Waiting for encryption key handshake approval...");
-                if (securityIntent != null) {
-                    Log.d(TAG, "Encryption key handshake approved!");
-                    handler.removeCallbacks(runnable);
-                } else {
-                    Log.d(TAG, "Encryption key still null...");
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    handler.postDelayed(this, 100);
-                }
-            }
-        };
-
-        public SubstratumThemeUpdate(Context mContext, String theme_package, String theme_name,
-                                     String theme_mode) {
-            this.mContext = mContext;
-            this.theme_package = theme_package;
-            this.theme_name = theme_name;
-            this.theme_mode = theme_mode;
-            this.cacheable = isPackageDebuggable(mContext, theme_package);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            progress = new ProgressDialog(mContext, R.style.AppTheme_DialogAlert);
-
-            String parse = String.format(mContext.getString(R.string.on_demand_updating_text),
-                    theme_name);
-
-            progress.setTitle(mContext.getString(R.string.on_demand_updating_title));
-            progress.setMessage(parse);
-            progress.setIndeterminate(false);
-            progress.setCancelable(false);
-            if (cacheable) progress.show();
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            if (progress != null) {
-                progress.dismiss();
-            }
-            if (launch) {
-                Toast.makeText(mContext, mContext.getString(R.string
-                                .background_updated_toast),
-                        Toast.LENGTH_SHORT).show();
-                // At this point, we can safely assume that the theme has successfully extracted
-                launchTheme(mContext, theme_package, theme_mode);
-            } else if (!cacheable) {
-                Toast.makeText(mContext, mContext.getString(R.string.
-                                background_updated_toast_rejected),
-                        Toast.LENGTH_SHORT).show();
-                // Just in case.
-                new CacheCreator().wipeCache(mContext, theme_package);
-            } else {
-                Toast.makeText(mContext, mContext.getString(R.string
-                                .background_updated_toast_cancel),
-                        Toast.LENGTH_SHORT).show();
-                // We don't want this cache anymore, delete it from the system completely
-                new CacheCreator().wipeCache(mContext, theme_package);
-            }
-        }
-
-        @Override
-        protected String doInBackground(Void... Params) {
-            if (!cacheable) return null;
-
-            String encrypt_check =
-                    References.getOverlayMetadata(mContext, theme_package, metadataEncryption);
-
-            if (encrypt_check != null && encrypt_check.equals(metadataEncryptionValue)) {
-                Log.d(TAG, "This overlay for " +
-                        References.grabPackageName(mContext, theme_package) +
-                        " is encrypted, passing handshake to the theme package...");
-
-                References.grabThemeKeys(mContext, theme_package);
-
-                keyRetrieval = new KeyRetrieval();
-                IntentFilter if1 = new IntentFilter(KEY_RETRIEVAL);
-                localBroadcastManager = LocalBroadcastManager.getInstance(mContext);
-                localBroadcastManager.registerReceiver(keyRetrieval, if1);
-
-                int counter = 0;
-                handler.postDelayed(runnable, 100);
-                while (securityIntent == null && counter < 5) {
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    counter++;
-                }
-                if (counter > 5) {
-                    Log.e(TAG, "Could not receive handshake in time...");
-                    return null;
-                }
-
-                if (securityIntent != null) {
-                    try {
-                        byte[] encryption_key =
-                                securityIntent.getByteArrayExtra("encryption_key");
-                        byte[] iv_encrypt_key =
-                                securityIntent.getByteArrayExtra("iv_encrypt_key");
-
-                        cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                        cipher.init(
-                                Cipher.DECRYPT_MODE,
-                                new SecretKeySpec(encryption_key, "AES"),
-                                new IvParameterSpec(iv_encrypt_key)
-                        );
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return null;
-                    }
-                }
-            }
-
-            launch = new CacheCreator().initializeCache(mContext, theme_package, cipher);
-            return null;
-        }
-
-        class KeyRetrieval extends BroadcastReceiver {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                securityIntent = intent;
-            }
         }
     }
 

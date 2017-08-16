@@ -59,6 +59,7 @@ public class OverlaysItem implements Serializable {
     private ArrayList<Object> enabledOverlays;
     private Drawable app_icon;
     private Boolean theme_oms;
+    private boolean isAndroidPackage;
 
     public OverlaysItem(String theme_name,
                         String name,
@@ -92,6 +93,7 @@ public class OverlaysItem implements Serializable {
         this.enabledOverlays = new ArrayList<>();
         this.enabledOverlays.addAll(enabledOverlays);
         this.app_icon = References.grabAppIcon(context, packageName);
+        isAndroidPackage = package_name.equals("android");
     }
 
     boolean isDeviceOMS() {
@@ -122,8 +124,12 @@ public class OverlaysItem implements Serializable {
         return baseResources;
     }
 
+    public boolean isAndroidPackage() {
+        return isAndroidPackage;
+    }
+
     public boolean isSelected() {
-        return isSelected;
+        return isAndroidPackage || isSelected;
     }
 
     public void setSelected(boolean isSelected) {

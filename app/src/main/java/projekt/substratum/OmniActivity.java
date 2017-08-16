@@ -22,12 +22,9 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.NotificationManager;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -51,7 +48,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import org.omnirom.substratum.R;
@@ -71,18 +67,13 @@ import static android.content.om.OverlayInfo.STATE_APPROVED_DISABLED;
 import static android.content.om.OverlayInfo.STATE_APPROVED_ENABLED;
 import static android.util.Base64.DEFAULT;
 import static projekt.substratum.common.References.BYPASS_SUBSTRATUM_BUILDER_DELETION;
-import static projekt.substratum.common.References.MANAGER_REFRESH;
 import static projekt.substratum.common.References.metadataOverlayParent;
 
 public class OmniActivity extends SubstratumActivity {
 
-    private Boolean uninstalled = false;
-    private byte[] byteArray;
     private SharedPreferences prefs;
     private ProgressDialog mProgressDialog;
-    private int tabPosition;
     private LocalBroadcastManager localBroadcastManager;
-    private BroadcastReceiver refreshReceiver;
     private boolean mStoragePerms;
     private FloatingActionButton floatingActionButton;
     private String theme_pid;
@@ -91,73 +82,50 @@ public class OmniActivity extends SubstratumActivity {
     private byte[] iv_encrypt_key;
 
     private class FabDialog extends Dialog implements View.OnClickListener {
-        private Switch enable_swap;
-        private TextView compile_enable_selected;
-        private TextView compile_update_selected;
+        private TextView compile_selected;
         private TextView disable_selected;
         private TextView enable_selected;
+        boolean enablePossible;
+        boolean disablePossible;
+        boolean compilePossible;
 
-        protected FabDialog(@NonNull Context context) {
+        protected FabDialog(@NonNull Context context, boolean compilePossible, boolean enablePossible, boolean disablePossible) {
             super(context);
+            this.enablePossible = enablePossible;
+            this.disablePossible = disablePossible;
+            this.compilePossible = compilePossible;
         }
 
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.sheet_dialog);
 
-            boolean checkOMS = References.checkOMS(OmniActivity.this);
-            enable_swap = (Switch) findViewById(R.id.enable_swap);
-            if (!checkOMS) {
-                enable_swap.setText(getString(R.string.fab_menu_swap_toggle_legacy));
-            }
-            boolean enabled = prefs.getBoolean("enable_swapping_overlays", false);
-            enable_swap.setChecked(enabled);
-            enable_swap.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                Intent intent = new Intent("Overlays.START_JOB");
-                intent.putExtra("command", "MixAndMatchMode");
-                intent.putExtra("newValue", isChecked);
-                localBroadcastManager.sendBroadcast(intent);
-            });
-
-            compile_enable_selected = (TextView) findViewById(R.id.compile_enable_selected);
-            if (!checkOMS) {
-                compile_enable_selected.setVisibility(View.GONE);
-            }
-            compile_enable_selected.setOnClickListener(this);
-
-            compile_update_selected = (TextView) findViewById(R.id.compile_update_selected);
-            if (!checkOMS) {
-                compile_update_selected.setText(getString(R.string.fab_menu_compile_install));
+            compile_selected = (TextView) findViewById(R.id.compile_selected);
+            if (!compilePossible) {
+                compile_selected.setEnabled(false);
             } else {
-                compile_update_selected.setVisibility(View.GONE);
+                compile_selected.setOnClickListener(this);
             }
-            compile_update_selected.setOnClickListener(this);
-
             disable_selected = (TextView) findViewById(R.id.disable_selected);
-            if (!checkOMS) {
-                disable_selected.setText(getString(R.string.fab_menu_uninstall));
-            }
-            disable_selected.setOnClickListener(this);
-
-            View enable_zone = findViewById(R.id.enable);
-            if (!checkOMS) {
-                enable_zone.setVisibility(View.GONE);
+            if (!disablePossible) {
+                disable_selected.setEnabled(false);
+            } else {
+                disable_selected.setOnClickListener(this);
             }
             enable_selected = (TextView) findViewById(R.id.enable_selected);
-            enable_selected.setOnClickListener(this);
+            if (!enablePossible) {
+                enable_selected.setEnabled(false);
+            } else {
+                enable_selected.setOnClickListener(this);
+            }
         }
 
         @Override
         public void onClick(View view) {
             Intent intent = new Intent("Overlays.START_JOB");
-            if (view == compile_enable_selected) {
+            if (view == compile_selected) {
                 dismiss();
                 intent.putExtra("command", "CompileEnable");
-                localBroadcastManager.sendBroadcast(intent);
-            }
-            if (view == compile_update_selected) {
-                dismiss();
-                intent.putExtra("command", "CompileUpdate");
                 localBroadcastManager.sendBroadcast(intent);
             }
             if (view == disable_selected) {
@@ -236,12 +204,7 @@ public class OmniActivity extends SubstratumActivity {
         }
 
         setContentView(R.layout.information_activity);
-
-        // Register the theme install receiver to auto refresh the fragment
-        refreshReceiver = new RefreshReceiver();
-        IntentFilter if1 = new IntentFilter(MANAGER_REFRESH);
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
-        localBroadcastManager.registerReceiver(refreshReceiver, if1);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         if (toolbar != null) {
@@ -269,8 +232,14 @@ public class OmniActivity extends SubstratumActivity {
 
         floatingActionButton.setOnClickListener(v -> {
             try {
-                final FabDialog sheetDialog = new FabDialog(this);
-                sheetDialog.show();
+                Overlays fragment = (Overlays) getSupportFragmentManager().findFragmentById(R.id.overlays);
+                if (fragment != null) {
+                    boolean disablePossible = fragment.getDisableOverlays().size() != 0;
+                    boolean enablePossible = fragment.canEnableOverlays();
+                    boolean compilePossible = fragment.canCompileOverlays();
+                    final FabDialog sheetDialog = new FabDialog(this, compilePossible, enablePossible, disablePossible);
+                    sheetDialog.show();
+                }
             } catch (NullPointerException npe) {
                 // Suppress warning
             }
@@ -461,8 +430,6 @@ public class OmniActivity extends SubstratumActivity {
 
     @Override
     public void onBackPressed() {
-        if (uninstalled)
-            References.sendRefreshMessage(getApplicationContext());
         finish();
     }
 
@@ -470,14 +437,7 @@ public class OmniActivity extends SubstratumActivity {
     public void onDestroy() {
         super.onDestroy();
 
-        try {
-            localBroadcastManager.unregisterReceiver(refreshReceiver);
-        } catch (IllegalArgumentException e) {
-            // Unregistered already
-        }
-
-        if (!BYPASS_SUBSTRATUM_BUILDER_DELETION &&
-                !References.isCachingEnabled(getApplicationContext())) {
+        if (!BYPASS_SUBSTRATUM_BUILDER_DELETION) {
             String workingDirectory =
                     getApplicationContext().getCacheDir().getAbsolutePath();
             File deleted = new File(workingDirectory);
@@ -501,35 +461,6 @@ public class OmniActivity extends SubstratumActivity {
             editor.putString("iv_encrypt_key", Base64.encodeToString(iv_encrypt_key, DEFAULT));
         }
         editor.commit();
-    }
-
-    private class uninstallTheme extends AsyncTask<String, Integer, String> {
-        @Override
-        protected void onPreExecute() {
-            String parseMe = String.format(getString(R.string.adapter_uninstalling), theme_name);
-            mProgressDialog = new ProgressDialog(OmniActivity.this);
-            mProgressDialog.setMessage(parseMe);
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.show();
-            // Clear the notification of building theme if shown
-            NotificationManager manager = (NotificationManager)
-                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            manager.cancel(References.notification_id);
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            mProgressDialog.cancel();
-            uninstalled = true;
-            onBackPressed();
-        }
-
-        @Override
-        protected String doInBackground(String... sUrl) {
-            References.uninstallPackage(getApplicationContext(), theme_pid);
-            return null;
-        }
     }
 
     private class enableInstalledTheme extends AsyncTask<ArrayList<String>, Void, Void> {
@@ -606,19 +537,6 @@ public class OmniActivity extends SubstratumActivity {
                     getApplicationContext(),
                     overlays[0]);
             return null;
-        }
-    }
-
-    class RefreshReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (!References.isPackageInstalled(context, theme_pid)) {
-                Log.d("ThemeUninstaller",
-                        "The theme was uninstalled, so the activity is now closing!");
-                References.sendRefreshMessage(context);
-                finish();
-            }
         }
     }
 

@@ -133,4 +133,5 @@
     <color name="app_shortcut_icon_background_color">@color/colorPrimary</color>
 
     <color name="main_launcher_background">#FAFAFA</color>
+
 </resources>

@@ -21,11 +21,9 @@ package projekt.substratum.common.commands;
 import android.content.Context;
 
 import projekt.substratum.Substratum;
-import projekt.substratum.common.References;
 
 import static projekt.substratum.common.References.ENABLE_AOPT_OUTPUT;
 import static projekt.substratum.common.References.getDeviceID;
-import static projekt.substratum.common.References.metadataIconPackParent;
 import static projekt.substratum.common.References.metadataOverlayDevice;
 import static projekt.substratum.common.References.metadataOverlayParent;
 import static projekt.substratum.common.References.metadataOverlayTarget;
@@ -47,7 +45,6 @@ public class CompilerCommands {
                                                String versionName,
                                                String targetPackage,
                                                String theme_parent,
-                                               String varianter,
                                                Boolean theme_oms,
                                                int legacy_priority,
                                                boolean base_variant_null,
@@ -129,43 +126,6 @@ public class CompilerCommands {
                 "</manifest>\n";
     }
 
-    @SuppressWarnings("SameParameterValue")
-    public static String createIconOverlayManifest(Context context,
-                                                   String overlay_package,
-                                                   String theme_pack,
-                                                   String versionName,
-                                                   String parsedIconName,
-                                                   Boolean theme_oms,
-                                                   // TODO: Allow this priority to be user adjusted
-                                                   int legacy_priority) {
-        return "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n" +
-
-                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" " +
-                "package=\"" + overlay_package + ".icon" + "\"\n" +
-
-                // Version of this overlay should match the version of the theme
-                "        android:versionName=\"" + theme_pack + " (" + versionName + "\"> \n" +
-
-                // Begin overlay parameters - include legacy as well (OMS ignored)
-                "    <overlay " + ((!theme_oms) ? "android:priority=\"" +
-                legacy_priority + "\" " : "") +
-                "android:targetPackage=\"" + overlay_package + "\"/>\n" +
-
-                // Our current overlay label is set to be its own package name
-                "    <application android:label=\"" + parsedIconName + "\">\n" +
-
-                // Ensure that this overlay was specifically made for this device only
-                "        <meta-data android:name=\"" + metadataOverlayDevice + "\" " +
-                "android:value=\"" + getDeviceID(context) + "\"/>\n" +
-
-                // We can easily track what the icon pack parents are without any parsing this way
-                "        <meta-data android:name=\"" + metadataIconPackParent + "\" " +
-                "android:value=\"" + theme_pack + "\"/>\n" +
-
-                "    </application>\n" +
-                "</manifest>\n";
-    }
-
     @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
     public static String createAOPTShellCommands(String work_area,
                                                  String targetPkg,
@@ -188,8 +148,7 @@ public class CompilerCommands {
         if (icon) {
             sb.append("-S " + work_area + "/res/ ");
         } else {
-            sb.append("-S " + work_area + (References.isCachingEnabled(context) ?
-                    "/workdir/ " : noCacheDir + "/ "));
+            sb.append("-S " + work_area + noCacheDir + "/ ");
         }
         // Build upon the system's Android framework
         sb.append("-I " + "/system/framework/framework-res.apk ");

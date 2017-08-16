@@ -133,13 +133,7 @@ public class SubstratumBuilder {
         }
 
         // 2. Set work area to asset chosen based on the parameter passed into this class
-        String work_area;
-        if (References.isCachingEnabled(context)) {
-            work_area = context.getCacheDir().getAbsolutePath() + SUBSTRATUM_BUILDER_CACHE +
-                    theme_pid + "/assets/overlays/" + overlay_package;
-        } else {
-            work_area = context.getCacheDir().getAbsolutePath() + SUBSTRATUM_BUILDER_CACHE;
-        }
+        String work_area = context.getCacheDir().getAbsolutePath() + SUBSTRATUM_BUILDER_CACHE;
 
         if (!theme_oms) {
             File check_legacy = new File(context.getCacheDir().getAbsolutePath() +
@@ -175,10 +169,21 @@ public class SubstratumBuilder {
             parse2_themeName = "no_name";
         }
 
-        // 5. Create the manifest file based on the new parsed names
-        String varianter = parse2_variantName + parse2_baseName;
-        varianter = varianter.replaceAll("\\s+", "").replaceAll("[^a-zA-Z0-9]+", "");
+        String overlayName = variant == null ?
+                overlay_package + "." + parse2_themeName :
+                overlay_package + "." + parse2_themeName + parse2_variantName + parse2_baseName;
 
+        special_snowflake = false;
+        if (overlay_package.equals("android") ||
+                overlay_package.equals("org.omnirom.substratum")) {
+            special_snowflake = ThemeManager.isOverlayEnabled(context, overlayName);
+        }
+        // dont recompile whats up to date
+        if (ThemeManager.isOverlayEnabled(context, overlayName)) {
+            return !has_errored_out;
+        }
+
+        // 5. Create the manifest file based on the new parsed names
         String targetPackage = overlay_package;
         if (References.allowedSettingsOverlay(overlay_package)) {
             targetPackage = "com.android.settings";
@@ -230,7 +235,6 @@ public class SubstratumBuilder {
                                         versionName,
                                         targetPackage,
                                         theme_parent,
-                                        varianter,
                                         theme_oms,
                                         legacy_priority,
                                         false,
@@ -255,7 +259,6 @@ public class SubstratumBuilder {
                                             versionName,
                                             targetPackage,
                                             theme_parent,
-                                            varianter,
                                             theme_oms,
                                             legacy_priority,
                                             false,
@@ -279,7 +282,6 @@ public class SubstratumBuilder {
                                             versionName,
                                             targetPackage,
                                             theme_parent,
-                                            varianter,
                                             theme_oms,
                                             legacy_priority,
                                             true,
@@ -413,15 +415,6 @@ public class SubstratumBuilder {
         // Superuser needed as this requires elevated privileges to run these commands
         if (!has_errored_out) {
             if (theme_oms) {
-                special_snowflake = false;
-                if (overlay_package.equals("android") ||
-                        overlay_package.equals("projekt.substratum")) {
-                    String overlayName = variant == null ?
-                            overlay_package + "." + parse2_themeName :
-                            overlay_package + "." + parse2_themeName + "." + varianter;
-                    special_snowflake = ThemeManager.isOverlayEnabled(context, overlayName);
-                }
-
                 if (!special_snowflake) {
                     try {
                         ThemeManager.installOverlay(context, Environment
@@ -440,26 +433,17 @@ public class SubstratumBuilder {
                 } else {
                     Log.d(References.SUBSTRATUM_BUILDER,
                             "Returning compiled APK path for later installation...");
-
-                    if (variant != null) {
-                        no_install = Environment
-                                .getExternalStorageDirectory()
-                                .getAbsolutePath() +
-                                EXTERNAL_STORAGE_CACHE + overlay_package + "." +
-                                parse2_themeName + "." + varianter + "-signed.apk";
-                    } else {
-                        no_install = Environment
-                                .getExternalStorageDirectory()
-                                .getAbsolutePath() +
-                                EXTERNAL_STORAGE_CACHE + overlay_package + "." +
-                                parse2_themeName + "-signed.apk";
-                    }
+                    no_install = Environment
+                            .getExternalStorageDirectory()
+                            .getAbsolutePath() +
+                            EXTERNAL_STORAGE_CACHE + overlay_package + "." +
+                            parse2_themeName + "-signed.apk";
                 }
             }
         }
 
         // Finally, clean this compilation code's cache
-        if (!BYPASS_SUBSTRATUM_BUILDER_DELETION && !References.isCachingEnabled(context)) {
+        if (!BYPASS_SUBSTRATUM_BUILDER_DELETION) {
             String workingDirectory =
                     context.getCacheDir().getAbsolutePath() + SUBSTRATUM_BUILDER_CACHE;
             File deleted = new File(workingDirectory);

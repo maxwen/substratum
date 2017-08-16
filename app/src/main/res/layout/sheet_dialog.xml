@@ -7,47 +7,25 @@
     android:orientation="vertical"
     android:padding="20dp">
 
-    <Switch
-        android:id="@+id/enable_swap"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:checked="false"
-        android:text="@string/fab_menu_swap_toggle"/>
-
-    <View
-        android:id="@+id/fab_menu_divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/fab_menu_divider"/>
-
     <TextView
-        android:id="@+id/compile_enable_selected"
+        android:id="@+id/compile_selected"
         style="@style/TextAppearance.MaterialSheetFab.Sheet.Item"
         android:drawableStart="@drawable/fab_menu_compile_enable"
-        android:text="@string/fab_menu_compile_enable"/>
+        android:text="@string/sheet_dialog_compile"
+        android:textColor="@color/disable_text"/>
 
     <TextView
-        android:id="@+id/compile_update_selected"
+        android:id="@+id/enable_selected"
         style="@style/TextAppearance.MaterialSheetFab.Sheet.Item"
-        android:drawableStart="@drawable/fab_menu_compile_update"
-        android:text="@string/fab_menu_compile_update"/>
+        android:drawableStart="@drawable/fab_menu_enable"
+        android:text="@string/sheet_dialog_enable"
+        android:textColor="@color/disable_text"/>
 
     <TextView
         android:id="@+id/disable_selected"
         style="@style/TextAppearance.MaterialSheetFab.Sheet.Item"
         android:drawableStart="@drawable/fab_menu_disable"
-        android:text="@string/fab_menu_disable"/>
+        android:text="@string/sheet_dialog_disable"
+        android:textColor="@color/disable_text"/>
 
-    <LinearLayout
-        android:id="@+id/enable"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <TextView
-            android:id="@+id/enable_selected"
-            style="@style/TextAppearance.MaterialSheetFab.Sheet.Item"
-            android:drawableStart="@drawable/fab_menu_enable"
-            android:text="@string/fab_menu_enable"/>
-    </LinearLayout>
 </LinearLayout>
