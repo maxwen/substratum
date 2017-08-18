@@ -75,7 +75,8 @@ public class OmniActivity extends SubstratumActivity {
     private ProgressDialog mProgressDialog;
     private LocalBroadcastManager localBroadcastManager;
     private boolean mStoragePerms;
-    private FloatingActionButton floatingActionButton;
+    private FloatingActionButton fabEdit;
+    private FloatingActionButton fabWallpaper;
     private String theme_pid;
     private String theme_name;
     private byte[] encryption_key;
@@ -221,7 +222,9 @@ public class OmniActivity extends SubstratumActivity {
         }
         if (toolbar != null) toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.apply_fab);
+        fabEdit = (FloatingActionButton) findViewById(R.id.apply_fab);
+        fabWallpaper = (FloatingActionButton) findViewById(R.id.wallpaper_fab);
+        fabWallpaper.setVisibility(isBrowseWallpaperAvailable() ? View.VISIBLE : View.GONE);
 
         Drawable upArrow = getResources().getDrawable(R.drawable.information_activity_back_light);
         if (upArrow != null)
@@ -230,7 +233,7 @@ public class OmniActivity extends SubstratumActivity {
         getSupportActionBar().setHomeAsUpIndicator(upArrow);
         setOverflowButtonColor(this, false);
 
-        floatingActionButton.setOnClickListener(v -> {
+        fabEdit.setOnClickListener(v -> {
             try {
                 Overlays fragment = (Overlays) getSupportFragmentManager().findFragmentById(R.id.overlays);
                 if (fragment != null) {
@@ -240,6 +243,17 @@ public class OmniActivity extends SubstratumActivity {
                     final FabDialog sheetDialog = new FabDialog(this, compilePossible, enablePossible, disablePossible);
                     sheetDialog.show();
                 }
+            } catch (NullPointerException npe) {
+                // Suppress warning
+            }
+        });
+
+        fabWallpaper.setOnClickListener(v -> {
+            try {
+                Intent browse = new Intent();
+                browse.setClassName("org.omnirom.omnistyle", "org.omnirom.omnistyle.BrowseWallsFilterActivity");
+                browse.putExtra("filter", "theme");
+                startActivity(browse);
             } catch (NullPointerException npe) {
                 // Suppress warning
             }
@@ -557,7 +571,7 @@ public class OmniActivity extends SubstratumActivity {
             case PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
                 if (checkPermissionGrantResults(grantResults)) {
                     mStoragePerms = true;
-                    floatingActionButton.show();
+                    fabEdit.show();
                 }
             }
         }
@@ -573,11 +587,11 @@ public class OmniActivity extends SubstratumActivity {
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
             mStoragePerms = false;
-            floatingActionButton.hide();
+            fabEdit.hide();
             return;
         }
         mStoragePerms = true;
-        floatingActionButton.show();
+        fabEdit.show();
     }
 
     private boolean checkIfOverlaysAreFromOmni() {
@@ -596,5 +610,12 @@ public class OmniActivity extends SubstratumActivity {
             }
         }
         return false;
+    }
+
+    private boolean isBrowseWallpaperAvailable() {
+        PackageManager pm = getPackageManager();
+        Intent browse = new Intent();
+        browse.setClassName("org.omnirom.omnistyle", "org.omnirom.omnistyle.BrowseWallsFilterActivity");
+        return pm.resolveActivity(browse, 0) != null;
     }
 }
