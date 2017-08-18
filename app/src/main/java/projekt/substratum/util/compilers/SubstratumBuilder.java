@@ -176,15 +176,11 @@ public class SubstratumBuilder {
                 overlay_package + "." + parse2_themeName + parse2_variantName + parse2_baseName;
 
         special_snowflake = false;
-        if (overlay_package.equals("android") ||
-                overlay_package.equals("org.omnirom.substratum")) {
-            special_snowflake = ThemeManager.isOverlayEnabled(context, overlayName);
-        }
+
         // dont recompile whats up to date
         boolean updateAvailable = false;
         try {
-            PackageInfo pinfo =
-                    context.getPackageManager().getPackageInfo(overlayName, 0);
+            PackageInfo pinfo = context.getPackageManager().getPackageInfo(overlayName, 0);
             updateAvailable = !pinfo.versionName.equals(versionName);
         } catch (PackageManager.NameNotFoundException e) {
             updateAvailable = true;
@@ -193,6 +189,11 @@ public class SubstratumBuilder {
             if (!updateAvailable) {
                 return !has_errored_out;
             }
+        }
+
+        if (overlay_package.equals("android") ||
+                overlay_package.equals("org.omnirom.substratum")) {
+            special_snowflake = ThemeManager.isOverlayEnabled(context, overlayName);
         }
 
         // 5. Create the manifest file based on the new parsed names

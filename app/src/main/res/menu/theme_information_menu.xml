@@ -36,9 +36,6 @@
         android:title="@string/menu_auto_restart_systemui"
         android:checkable="true" />
     <item
-        android:id="@+id/uninstall"
-        android:title="@string/menu_uninstall"/>
-    <item
         android:id="@+id/about_substratum"
         android:title="@string/nav_team_contributors"/>
 </menu>

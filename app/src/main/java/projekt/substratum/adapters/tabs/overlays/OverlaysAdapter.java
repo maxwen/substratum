@@ -153,10 +153,10 @@ public class OverlaysAdapter extends RecyclerView.Adapter<OverlaysAdapter.ViewHo
     private void zeroIndex(Context context, OverlaysItem current_object, ViewHolder viewHolder) {
         viewHolder.overlayState.setVisibility(View.GONE);
         if (current_object.isPackageInstalled((current_object.getFullOverlayParameters()))) {
-            viewHolder.overlayState.setVisibility(View.VISIBLE);
             // Check whether currently installed overlay is up to date with
             // theme_pid's versionName
             if (!current_object.compareInstalledOverlay()) {
+                viewHolder.overlayState.setVisibility(View.VISIBLE);
                 viewHolder.overlayState.setText(context.getString(R.string.overlays_update_available_new));
                 viewHolder.overlayState.setTextColor(
                         context.getColor(R.color.overlay_update_available));

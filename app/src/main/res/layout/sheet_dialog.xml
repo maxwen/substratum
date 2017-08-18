@@ -10,7 +10,7 @@
     <TextView
         android:id="@+id/compile_selected"
         style="@style/TextAppearance.MaterialSheetFab.Sheet.Item"
-        android:drawableStart="@drawable/fab_menu_compile_enable"
+        android:drawableStart="@drawable/fab_menu_compile_update"
         android:text="@string/sheet_dialog_compile"
         android:textColor="@color/disable_text"/>
 

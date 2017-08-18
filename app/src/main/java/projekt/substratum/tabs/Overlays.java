@@ -157,6 +157,7 @@ public class Overlays extends Fragment {
     public boolean decryptedAssetsExceptionReached;
     private Context context;
     private Activity activity;
+    private boolean canUpdateOverlay;
 
     protected void logTypes() {
         if (ENABLE_PACKAGE_LOGGING) {
@@ -1325,6 +1326,7 @@ public class Overlays extends Fragment {
 
     public boolean canCompileOverlays() {
         overlaysLists = ((OverlaysAdapter) mAdapter).getOverlayList();
+        canUpdateOverlay = false;
         ArrayList<String> checkedOverlays = new ArrayList<>();
 
         for (int i = 0; i < overlaysLists.size(); i++) {
@@ -1333,8 +1335,15 @@ public class Overlays extends Fragment {
             // enable compile if not yet enabled or if different version available
             if (currentOverlay.isSelected() && (!currentOverlay.isOverlayEnabled() || !currentOverlay.compareInstalledOverlay())) {
                 checkedOverlays.add(currentFullName);
+                if (currentOverlay.isOverlayEnabled() && !currentOverlay.compareInstalledOverlay()) {
+                    canUpdateOverlay = true;
+                }
             }
         }
         return checkedOverlays.size() != 0;
+    }
+
+    public boolean canUpdateOverlays() {
+        return canUpdateOverlay;
     }
 }
