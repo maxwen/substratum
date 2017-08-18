@@ -19,6 +19,8 @@
 package projekt.substratum.util.compilers;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -179,8 +181,18 @@ public class SubstratumBuilder {
             special_snowflake = ThemeManager.isOverlayEnabled(context, overlayName);
         }
         // dont recompile whats up to date
+        boolean updateAvailable = false;
+        try {
+            PackageInfo pinfo =
+                    context.getPackageManager().getPackageInfo(overlayName, 0);
+            updateAvailable = !pinfo.versionName.equals(versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            updateAvailable = true;
+        }
         if (ThemeManager.isOverlayEnabled(context, overlayName)) {
-            return !has_errored_out;
+            if (!updateAvailable) {
+                return !has_errored_out;
+            }
         }
 
         // 5. Create the manifest file based on the new parsed names

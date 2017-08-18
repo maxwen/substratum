@@ -1330,7 +1330,8 @@ public class Overlays extends Fragment {
         for (int i = 0; i < overlaysLists.size(); i++) {
             OverlaysItem currentOverlay = overlaysLists.get(i);
             String currentFullName = currentOverlay.getFullOverlayParameters();
-            if (currentOverlay.isSelected() && !currentOverlay.isOverlayEnabled()) {
+            // enable compile if not yet enabled or if different version available
+            if (currentOverlay.isSelected() && (!currentOverlay.isOverlayEnabled() || !currentOverlay.compareInstalledOverlay())) {
                 checkedOverlays.add(currentFullName);
             }
         }

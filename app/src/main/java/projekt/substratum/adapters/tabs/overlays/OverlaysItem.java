@@ -253,7 +253,7 @@ public class OverlaysItem implements Serializable {
         return context;
     }
 
-    boolean compareInstalledOverlay() {
+    public boolean compareInstalledOverlay() {
         try {
             PackageInfo pinfo =
                     context.getPackageManager().getPackageInfo(getFullOverlayParameters(), 0);
