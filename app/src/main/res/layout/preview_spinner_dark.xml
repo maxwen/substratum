@@ -20,7 +20,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:background="@color/colorPrimary"
+              android:background="@color/toggle_zone_background_color"
               android:orientation="horizontal"
               android:foreground="?android:attr/selectableItemBackground" >
 
@@ -39,5 +39,5 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/listPreferredItemHeightSmall"
         android:ellipsize="marquee"
-        android:textColor="@color/information_activity_light_icon_mode"/>
+        android:textColor="@color/variant_name_text_color"/>
 </LinearLayout>

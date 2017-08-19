@@ -129,9 +129,8 @@
     <color name="fab_menu_divider">#4a000000</color>
     <color name="fab_background_color">@color/colorAccent</color>
 
-    <color name="app_shortcut_icon_color">#ffffffff</color>
-    <color name="app_shortcut_icon_background_color">@color/colorPrimary</color>
-
-    <color name="main_launcher_background">#FAFAFA</color>
-
+    <color name="toggle_zone_background_color">@color/colorPrimary</color>
+    <color name="toolbar_title_text_color">@android:color/white</color>
+    <color name="variant_name_text_color">@android:color/white</color>
+    <color name="spinner_icon_tint">@android:color/white</color>
 </resources>

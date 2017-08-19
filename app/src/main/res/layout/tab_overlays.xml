@@ -35,7 +35,7 @@
             android:paddingTop="8dp"
             android:paddingStart="16dp"
             android:paddingEnd="10dp"
-            android:background="@color/colorPrimary" >
+            android:background="@color/toggle_zone_background_color" >
 
             <TextView
                 android:id="@+id/toggle_all_overlays_text"
@@ -50,11 +50,9 @@
                 android:id="@+id/type3_spinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="-12dp"
-                android:layout_marginStart="-7dp"
-                android:layout_marginTop="-10dp"
+                android:layout_marginTop="-5dp"
                 android:layout_toStartOf="@+id/toggle_all_overlays"
-                android:backgroundTint="@color/information_activity_light_icon_mode" />
+                android:backgroundTint="@color/spinner_icon_tint" />
 
             <Switch
                 android:id="@+id/toggle_all_overlays"
