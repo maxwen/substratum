@@ -67,6 +67,7 @@ public class SubstratumBuilder {
     public String no_install = "";
     private String error_logs = "";
     private boolean debug;
+    private static boolean do_zipalign = true;
 
     public String getErrorLogs() {
         return error_logs;
@@ -350,7 +351,7 @@ public class SubstratumBuilder {
         }
 
         // 7. Zipalign the apk
-        if (!has_errored_out) {
+        if (!has_errored_out && do_zipalign) {
             String source = work_area + "/" + overlay_package + "." + parse2_themeName +
                     "-unsigned.apk";
 
@@ -399,7 +400,7 @@ public class SubstratumBuilder {
         if (!has_errored_out) {
             // Sign with the built-in test key/certificate.
             String source = work_area + "/" + overlay_package + "." + parse2_themeName +
-                    "-unsigned-aligned.apk";
+                    (do_zipalign ? "-unsigned-aligned.apk" : "-unsigned.apk");
             if (!new File(source).exists()) {
                 dumpErrorLogs(References.SUBSTRATUM_BUILDER, overlay_package,
                         "Creating unsigned aligned apk faild " + source);
