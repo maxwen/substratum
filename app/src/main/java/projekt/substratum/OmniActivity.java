@@ -76,7 +76,6 @@ public class OmniActivity extends SubstratumActivity {
     private LocalBroadcastManager localBroadcastManager;
     private boolean mStoragePerms;
     private FloatingActionButton fabEdit;
-    private FloatingActionButton fabWallpaper;
     private String theme_pid;
     private String theme_name;
     private byte[] encryption_key;
@@ -229,8 +228,6 @@ public class OmniActivity extends SubstratumActivity {
         if (toolbar != null) toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         fabEdit = (FloatingActionButton) findViewById(R.id.apply_fab);
-        fabWallpaper = (FloatingActionButton) findViewById(R.id.wallpaper_fab);
-        fabWallpaper.setVisibility(isBrowseWallpaperAvailable() ? View.VISIBLE : View.GONE);
 
         Drawable upArrow = getResources().getDrawable(R.drawable.information_activity_back_light);
         if (upArrow != null)
@@ -255,17 +252,6 @@ public class OmniActivity extends SubstratumActivity {
             }
         });
 
-        fabWallpaper.setOnClickListener(v -> {
-            try {
-                Intent browse = new Intent();
-                browse.setClassName("org.omnirom.omnistyle", "org.omnirom.omnistyle.BrowseWallsFilterActivity");
-                browse.putExtra("filter", "theme");
-                startActivity(browse);
-            } catch (NullPointerException npe) {
-                // Suppress warning
-            }
-        });
-
         requestStoragePermissions();
         CheckBinaries.install(this, true);
 
@@ -283,6 +269,8 @@ public class OmniActivity extends SubstratumActivity {
 
         menu.findItem(R.id.disable).setVisible(false);
         menu.findItem(R.id.enable).setVisible(false);
+        menu.findItem(R.id.wallpaper).setVisible(isBrowseWallpaperAvailable());
+        menu.findItem(R.id.header).setVisible(isBrowseHeaderAvailable());
 
         return true;
     }
@@ -445,6 +433,18 @@ public class OmniActivity extends SubstratumActivity {
                 boolean enabled = prefs.getBoolean("enable_restart_systemui", true);
                 prefs.edit().putBoolean("enable_restart_systemui", !enabled).commit();
                 return true;
+            case R.id.wallpaper: {
+                Intent browse = new Intent();
+                browse.setClassName("org.omnirom.omnistyle", "org.omnirom.omnistyle.BrowseWallsFilterActivity");
+                browse.putExtra("filter", "theme");
+                startActivity(browse);
+                return true;}
+            case R.id.header: {
+                Intent browse = new Intent();
+                browse.setClassName("org.omnirom.omnistyle", "org.omnirom.omnistyle.BrowseThemeHeaderActivity");
+                startActivity(browse);
+                return true;
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -623,6 +623,13 @@ public class OmniActivity extends SubstratumActivity {
         PackageManager pm = getPackageManager();
         Intent browse = new Intent();
         browse.setClassName("org.omnirom.omnistyle", "org.omnirom.omnistyle.BrowseWallsFilterActivity");
+        return pm.resolveActivity(browse, 0) != null;
+    }
+
+    private boolean isBrowseHeaderAvailable() {
+        PackageManager pm = getPackageManager();
+        Intent browse = new Intent();
+        browse.setClassName("org.omnirom.omnistyle", "org.omnirom.omnistyle.BrowseThemeHeaderActivity");
         return pm.resolveActivity(browse, 0) != null;
     }
 }

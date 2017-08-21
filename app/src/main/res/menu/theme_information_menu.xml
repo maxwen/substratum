@@ -20,6 +20,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/wallpaper"
+        android:icon="@drawable/fab_wallpaper_icon"
+        android:title="@string/wallpaper_menu"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/header"
+        android:icon="@drawable/fab_header_icon"
+        android:title="@string/header_menu"
+        app:showAsAction="always"/>
+    <item
         android:id="@+id/clean"
         android:title="@string/menu_clean"/>
     <item
